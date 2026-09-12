@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="{{TITLE}}">
+    <title>{{TITLE}}</title>
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../shared/deck.css">
+    {{THEME_STYLESHEET}}
+    <link rel="stylesheet" href="styles.css">
+    <script src="../shared/deck.js" defer></script>
+    <script src="deck.js" defer></script>
+</head>
+<body>
+    <a class="deck-download" href="downloads/{{SLUG}}.pdf" download>PDF 다운로드 <span aria-hidden="true">↓</span></a>
+    <main class="deck-shell">
+        <div class="deck-stage" data-deck data-deck-title="{{TITLE}}" data-deck-footer="{{TITLE}}">
+            <section class="slide title-slide is-active" data-title="{{TITLE}}">
+                <p class="eyebrow">{{CATEGORY}} · {{DATE}}</p>
+                <div class="title-content">
+                    <h1>{{TITLE}}</h1>
+                    <p class="lead" data-template-placeholder>이 발표에서 다룰 내용을 한 문장으로 적으세요.</p>
+                    <p class="muted author" data-template-placeholder>발표자 · 소속</p>
+                </div>
+                <aside class="speaker-notes"><p data-template-placeholder>도입에서 전할 이야기와 예상 시간을 적으세요.</p></aside>
+            </section>
+            <section class="slide" data-title="핵심 내용">
+                <p class="eyebrow">01 · 핵심 내용</p>
+                <h2 data-template-placeholder>이 슬라이드의 주제</h2>
+                <div class="content-area">
+                    <p class="statement" data-template-placeholder>가장 중요한 내용을<br>짧고 분명하게 적으세요.</p>
+                    <p class="lead" data-template-placeholder>주장을 뒷받침하는 설명과 근거를 적으세요.</p>
+                </div>
+                <aside class="speaker-notes"><p data-template-placeholder>설명 순서와 출처를 적으세요.</p></aside>
+            </section>
+            <section class="slide" data-title="비교와 설명">
+                <p class="eyebrow">02 · 비교와 설명</p>
+                <h2 data-template-placeholder>비교할 대상이나 사례</h2>
+                <div class="split equal comparison">
+                    <div><h3 data-template-placeholder>첫 번째 대상</h3><p class="lead" data-template-placeholder>같은 기준으로 설명하세요. 이미지가 필요하면 assets 폴더에 넣고 여기에 연결하세요.</p></div>
+                    <div><h3 data-template-placeholder>두 번째 대상</h3><p class="lead" data-template-placeholder>달라지는 점이나 사례를 적으세요. 그래프와 표를 넣어도 좋습니다.</p></div>
+                </div>
+                <aside class="speaker-notes"><p data-template-placeholder>비교 기준과 질문을 적으세요.</p></aside>
+            </section>
+            <section class="slide" data-title="정리">
+                <p class="eyebrow">03 · 정리</p>
+                <h2 data-template-placeholder>기억할 내용</h2>
+                <div class="content-area">
+                    <p class="statement" data-template-placeholder>발표의 결론을 적으세요.</p>
+                    <p class="lead" data-template-placeholder>후속 활동이나 질문을 적으세요.</p>
+                    <div class="action-row"><a class="button" href="../">자료실로 돌아가기</a></div>
+                </div>
+                <aside class="speaker-notes"><p data-template-placeholder>마무리 설명을 적으세요.</p></aside>
+            </section>
+        </div>
+    </main>
+    <nav class="deck-controls" aria-label="슬라이드 이동">
+        <button type="button" data-deck-previous title="이전 슬라이드 (←)">←</button>
+        <span class="deck-count" data-deck-count aria-live="polite"></span>
+        <button type="button" data-deck-next title="다음 슬라이드 (→)">→</button>
+    </nav>
+    <div class="deck-progress-track" aria-hidden="true"><div class="deck-progress" data-deck-progress></div></div>
+    <aside class="notes-panel" data-deck-notes aria-label="발표자 노트"></aside>
+</body>
+</html>

@@ -1,0 +1,17 @@
+/* 이 자료에만 적용할 레이아웃입니다. 공통 기능은 shared/에서 관리합니다. */
+.title-content, .content-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    flex: 1;
+    min-height: 0;
+    gap: 2cqh;
+}
+.title-content h1 { max-width: 84cqw; }
+.title-content .lead { max-width: 70cqw; }
+.author { margin-top: 4cqh; font-size: 1.3cqw; }
+.statement { max-width: 80cqw; font-size: 3.5cqw; line-height: 1.4; font-weight: 750; letter-spacing: -.045em; }
+.comparison > div { padding: 0 3cqw 0 0; }
+.comparison > div + div { padding: 0 0 0 3cqw; border-left: 1px solid var(--line); }
+.comparison h3 { color: var(--accent); margin-bottom: 3cqh; }

@@ -67,6 +67,7 @@
             if (!Array.isArray(decks) || decks.some((deck) => !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(deck.slug) || !deck.title)) {
                 throw new Error('자료 목록 형식이 올바르지 않습니다.');
             }
+            decks = decks.filter((deck) => (deck.status || 'published') === 'published');
             const render = () => {
                 const query = search.value.trim().toLocaleLowerCase('ko');
                 const visible = decks.filter((deck) => (selectedCategory === '전체' || (deck.category || '발표') === selectedCategory)

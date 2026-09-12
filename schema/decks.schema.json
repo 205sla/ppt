@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "205 자료실 목록",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["slug", "title", "status"],
+    "properties": {
+      "slug": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$", "description": "공개 URL의 폴더명. 대소문자 변경 금지" },
+      "title": { "type": "string", "minLength": 1 },
+      "status": { "enum": ["draft", "published"], "default": "draft" },
+      "category": { "type": "string" },
+      "date": { "type": "string", "format": "date" },
+      "description": { "type": "string" },
+      "meta": { "type": "string" }
+    },
+    "additionalProperties": false
+  }
+}

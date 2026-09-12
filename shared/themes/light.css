@@ -1,0 +1,19 @@
+:root {
+    color-scheme: light;
+    --ink: #202631;
+    --muted: #657080;
+    --navy-950: #f8f9fb;
+    --navy-900: #eff2f7;
+    --navy-800: #e5eaf3;
+    --line: #cdd5e2;
+    --accent: #315acf;
+    --accent-secondary: #315acf;
+}
+html, body, .deck-shell { background: #e8ecf2; }
+.slide { background: #f8f9fb; }
+.slide::before { background: var(--accent); }
+.lead { color: #4c5a6e; }
+.formula { color: var(--ink); background: #eaf0fb; }
+.button, button.button { color: var(--ink); background: #fff; border-color: #c0ccdf; }
+.button:hover, .button:focus-visible { color: var(--accent); background: #eef3fc; }
+.stage-panel { background: #fff; border-color: var(--line); }

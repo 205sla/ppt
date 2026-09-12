@@ -1,3 +1,11 @@
+:root {
+    --accent: #22b6ff;
+    --accent-secondary: #8b0029;
+    --entry: var(--accent);
+    --entry-deep: #008dd2;
+    --khu: var(--accent-secondary);
+}
+
 .ease-cover {
     background:
         radial-gradient(circle at 78% 45%, rgba(34, 182, 255, 0.18), transparent 30%),

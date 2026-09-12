@@ -6,9 +6,8 @@
     --navy-900: #0d1425;
     --navy-800: #14203a;
     --line: #2a3a5b;
-    --entry: #22b6ff;
-    --entry-deep: #008dd2;
-    --khu: #8b0029;
+    --accent: #8ba4ff;
+    --accent-secondary: #8ba4ff;
     --pink: #f72585;
     --yellow: #ffd166;
     --mint: #72efdd;
@@ -88,7 +87,7 @@ a {
     position: absolute;
     inset: 0 0 auto;
     height: 0.55cqh;
-    background: linear-gradient(90deg, var(--entry) 0 72%, var(--khu) 72%);
+    background: linear-gradient(90deg, var(--accent) 0 72%, var(--accent-secondary) 72%);
 }
 
 .slide-number {
@@ -116,12 +115,12 @@ a {
     width: 1.6cqw;
     height: 0.18cqh;
     align-self: center;
-    background: var(--khu);
+    background: var(--accent-secondary);
 }
 
 .eyebrow {
     margin: 0 0 1.2cqh;
-    color: var(--entry);
+    color: var(--accent);
     font-size: 1.12cqw;
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -180,7 +179,7 @@ a {
 }
 
 .accent {
-    color: var(--entry);
+    color: var(--accent);
 }
 
 .pink { color: var(--pink); }
@@ -217,7 +216,7 @@ a {
     align-items: baseline;
     gap: 0.6cqw;
     padding: 1.1cqh 1.1cqw;
-    border-left: 0.35cqw solid var(--entry);
+    border-left: 0.35cqw solid var(--accent);
     color: #fff;
     background: #111d34;
     font-family: "JetBrains Mono", "Cascadia Code", monospace;
@@ -257,26 +256,26 @@ button.button {
 .button:hover,
 .button:focus-visible {
     transform: translateY(-0.15cqh);
-    border-color: var(--entry);
+    border-color: var(--accent);
     background: #1b3154;
     outline: none;
 }
 
 .button.primary {
-    border-color: var(--entry);
+    border-color: var(--accent);
     color: #03121c;
-    background: var(--entry);
+    background: var(--accent);
     font-weight: 900;
 }
 
 .button[data-active="true"] {
-    border-color: var(--entry);
+    border-color: var(--accent);
     color: #03121c;
-    background: var(--entry);
+    background: var(--accent);
 }
 
 .big-number {
-    color: var(--entry);
+    color: var(--accent);
     font-size: 7.2cqw;
     font-weight: 950;
     line-height: 0.9;
@@ -368,7 +367,7 @@ button.button {
     font: 600 12px/1.4 "Malgun Gothic", system-ui, sans-serif;
     text-decoration: none;
 }
-.deck-download:hover, .deck-download:focus-visible { border-color: var(--entry); color: var(--entry); }
+.deck-download:hover, .deck-download:focus-visible { border-color: var(--accent); color: var(--accent); }
 :fullscreen .deck-download { display: none; }
 
 .deck-progress-track {
@@ -382,7 +381,7 @@ button.button {
 .deck-progress {
     width: 0;
     height: 100%;
-    background: linear-gradient(90deg, var(--entry), var(--mint));
+    background: linear-gradient(90deg, var(--accent), var(--mint));
     transition: width 180ms ease;
 }
 

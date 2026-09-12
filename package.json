@@ -5,10 +5,16 @@
   "type": "module",
   "scripts": {
     "serve": "node scripts/serve.mjs",
-    "validate": "node scripts/validate-site.mjs && node --check shared/deck.js && node --check shared/catalog.js && node --check Ease/deck.js",
+    "validate": "node scripts/validate-site.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "deck:new": "node scripts/new-deck.mjs",
+    "deck:list": "node scripts/manage-decks.mjs list",
+    "deck:publish": "node scripts/manage-decks.mjs publish",
+    "deck:draft": "node scripts/manage-decks.mjs draft",
     "qa": "node scripts/qa-slides.mjs",
     "pdf": "node scripts/export-pdfs.mjs",
-    "build": "npm run pdf && npm run validate && node scripts/build-site.mjs",
+    "build": "npm run validate && npm run pdf && node scripts/build-site.mjs",
+    "preview": "node scripts/serve.mjs --dist",
     "entry:build": "node Ease/source/entry/build-ease-files.mjs",
     "entry:verify": "node Ease/source/entry/verify-ease-lab.mjs",
     "entry:blocks": "node Ease/source/entry/export-block-images.mjs"
