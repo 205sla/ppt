@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#070b16">
+    <meta name="description" content="중학생 엔트리 수업용 이징 함수 인터랙티브 슬라이드">
+    <title>이징 함수로 움직임 디자인하기 · ppt.205.kr</title>
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../shared/deck.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="../shared/deck.js" defer></script>
+    <script src="deck.js" defer></script>
+</head>
+<body>
+    <main class="deck-shell">
+        <div class="deck-stage" data-deck data-deck-title="이징 함수로 움직임 디자인하기" data-deck-footer="저자 직강! 엔트리로 나만의 게임 만들기 · 이징 함수 실습">
+            <section class="slide ease-cover is-active" data-title="이징 함수로 움직임 디자인하기">
+                <img class="khu-mark" src="assets/brand/khu-signature.png" alt="경희대학교">
+                <div class="cover-grid">
+                    <div>
+                        <div class="cover-kicker">ENTRY MOTION LAB</div>
+                        <h1><span class="accent">이징 함수</span>로<br><span class="cover-nowrap">움직임 디자인하기</span></h1>
+                        <p class="cover-subtitle">같은 시간, 같은 거리.<br>그런데 느낌은 완전히 다르다.</p>
+                    </div>
+                    <div class="cover-motion" aria-hidden="true">
+                        <div class="cover-curve"></div>
+                        <div class="cover-ball"></div>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>1분</strong> 오늘은 ‘더 빨리 움직이는 코드’가 아니라 ‘속도의 변화를 디자인하는 코드’를 만듭니다. 수식은 네 개뿐이고, 먼저 눈으로 차이를 찾게 합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="먼저 눈으로 비교">
+                <p class="eyebrow">01 · 관찰</p>
+                <div class="split">
+                    <div>
+                        <h2>어느 공이 가장<br><span class="accent">자연스럽게</span> 보이나요?</h2>
+                        <p class="lead">네 공은 모두 <strong>2초</strong> 뒤<br>같은 곳에 도착합니다.</p>
+                        <div class="action-row">
+                            <button class="button primary" type="button" data-race-play-proxy>▶ 출발</button>
+                            <button class="button" type="button" data-race-reset-proxy>↺ 처음으로</button>
+                        </div>
+                    </div>
+                    <div class="race-board" data-race data-autoplay="true" data-duration="2800">
+                        <div class="race-head">
+                            <span class="muted">같은 시간 · 같은 거리</span>
+                            <output class="race-time" data-race-time>t = 0.00</output>
+                        </div>
+                        <div class="lane" data-ease="linear"><span class="lane-name">일정하게</span><div class="rail"><span class="runner"></span></div><output class="lane-value">0%</output></div>
+                        <div class="lane" data-ease="easeIn"><span class="lane-name">천천히 출발</span><div class="rail"><span class="runner"></span></div><output class="lane-value">0%</output></div>
+                        <div class="lane" data-ease="easeOut"><span class="lane-name">천천히 도착</span><div class="rail"><span class="runner"></span></div><output class="lane-value">0%</output></div>
+                        <div class="lane" data-ease="easeInOut"><span class="lane-name">양쪽 천천히</span><div class="rail"><span class="runner"></span></div><output class="lane-value">0%</output></div>
+                        <button class="sr-only" type="button" data-action="play">재생</button>
+                        <button class="sr-only" type="button" data-action="reset">초기화</button>
+                    </div>
+                </div>
+                <img class="question-mark" src="assets/brand/entrybot-curious.png" alt="돋보기로 관찰하는 엔트리봇">
+                <aside class="speaker-notes">
+                    <p><strong>3분</strong> 수식 이름을 설명하지 말고 먼저 재생합니다. “가장 빠른 공”이 아니라 “가장 자연스러운 공”을 묻고, 답이 달라도 이유를 말하게 합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="시간을 멈춰 관찰">
+                <p class="eyebrow">02 · 멈춰 보기</p>
+                <h2>시간이 <span class="yellow">50%</span> 흘렀을 때, 위치는?</h2>
+                <div class="race-board" data-race data-initial="0.5">
+                    <div class="race-head">
+                        <span class="lead">슬라이더를 움직여 시간을 멈춰 보세요.</span>
+                        <output class="race-time" data-race-time>t = 0.50</output>
+                    </div>
+                    <div class="lane" data-ease="linear"><span class="lane-name">일정하게</span><div class="rail"><span class="runner"></span></div><output class="lane-value">50%</output></div>
+                    <div class="lane" data-ease="easeIn"><span class="lane-name">천천히 출발</span><div class="rail"><span class="runner"></span></div><output class="lane-value">25%</output></div>
+                    <div class="lane" data-ease="easeOut"><span class="lane-name">천천히 도착</span><div class="rail"><span class="runner"></span></div><output class="lane-value">75%</output></div>
+                    <div class="lane" data-ease="easeInOut"><span class="lane-name">양쪽 천천히</span><div class="rail"><span class="runner"></span></div><output class="lane-value">50%</output></div>
+                    <div class="range-row"><span class="range-label">0</span><input type="range" min="0" max="1" step="0.01" value="0.5" data-race-range aria-label="시간 비율"><span class="range-output">1</span></div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>3분</strong> t=0.5에서 잠시 멈춥니다. 시간은 모두 같지만 각 공이 이동한 비율은 다릅니다. 여기서 t와 p를 분리할 필요가 생깁니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="이징의 핵심 원리">
+                <p class="eyebrow">03 · 핵심 원리</p>
+                <h2>함수는 숫자를 <span class="accent">다른 숫자</span>로 바꾸는 규칙</h2>
+                <div class="concept-flow">
+                    <div class="flow-node"><strong>t</strong><span>시간 비율<br>0 → 1</span></div>
+                    <div class="flow-arrow" aria-hidden="true">→</div>
+                    <div class="flow-node function"><strong>f(t)</strong><span>이징 함수<br>속도 느낌을 설계</span></div>
+                    <div class="flow-arrow" aria-hidden="true">→</div>
+                    <div class="flow-node position"><strong>p</strong><span>이동 비율<br>0 → 1</span></div>
+                </div>
+                <p class="takeaway">이징은 시간을 늘리는 것이 아니라, <span class="yellow">같은 시간의 진행률</span>을 바꿉니다.</p>
+                <aside class="speaker-notes">
+                    <p><strong>4분</strong> 중학생에게 함수는 ‘숫자 변환 규칙’으로 소개합니다. t가 시계, p가 이동한 비율임을 손동작으로 구분해 주세요.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="점 간격으로 속도 읽기">
+                <p class="eyebrow">04 · 속도를 눈으로 보기</p>
+                <h2>같은 시간마다 점을 찍으면 <span class="accent">속도</span>가 보인다</h2>
+                <div class="dot-demo" data-dot-trail>
+                    <div class="ease-list">
+                        <button class="button" type="button" data-dot-ease="linear">일정하게</button>
+                        <button class="button" type="button" data-dot-ease="easeIn">천천히 출발</button>
+                        <button class="button" type="button" data-dot-ease="easeOut">천천히 도착</button>
+                        <button class="button" type="button" data-dot-ease="easeInOut">양쪽 천천히</button>
+                    </div>
+                    <div class="dot-stage">
+                        <div class="dot-line" data-dot-line></div>
+                        <p class="gap-hint" data-dot-label>간격이 같다 → 속도가 일정하다</p>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>4분</strong> 점은 0.1초마다 찍혔다고 가정합니다. 점 사이가 넓으면 같은 시간 동안 멀리 이동했으므로 빠른 것입니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="시간을 0부터 1로 정리">
+                <p class="eyebrow">05 · 시간 정규화</p>
+                <h2>몇 초짜리 움직임이든 <span class="accent">0에서 1</span>로 정리한다</h2>
+                <div class="normalize-panel" data-normalizer>
+                    <div class="t-gauge"><output data-normalizer-output>0.00</output></div>
+                    <div>
+                        <div class="formula big">t = 지난 시간 ÷ 전체 시간</div>
+                        <p class="lead">1초든 4초든 t는 항상<br><strong>0 → 1</strong>로 움직입니다.</p>
+                        <div class="duration-select" aria-label="전체 시간 선택">
+                            <button class="button" type="button" data-duration="1">1초</button>
+                            <button class="button" type="button" data-duration="2">2초</button>
+                            <button class="button" type="button" data-duration="4">4초</button>
+                        </div>
+                        <button class="button primary" type="button" data-normalizer-play>▶ 시간 흘리기</button>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>4분</strong> ‘정규화’라는 용어는 한 번만 말하고, 전체 시간을 몇 초로 바꿔도 0에서 1까지 가는 사실을 직접 눌러 확인합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="진행률을 실제 위치로">
+                <p class="eyebrow">06 · 위치 계산</p>
+                <h2>진행률 <span class="yellow">p</span>를 실제 좌표 <span class="mint">x</span>로 바꾸기</h2>
+                <div class="split equal">
+                    <div>
+                        <div class="formula big">x = 시작 + (끝 − 시작) × p</div>
+                        <p class="lead">p=0이면 시작,<br>p=1이면 정확히 도착.</p>
+                    </div>
+                    <div class="position-demo" data-position-demo>
+                        <div class="position-track"><span class="position-ball"></span></div>
+                        <input type="range" min="0" max="1" step="0.01" value="0.5" data-position-range aria-label="이동 비율 p">
+                        <output class="equation-output" data-position-output></output>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>5분</strong> 시작=-120, 끝=230이면 전체 거리는 350입니다. p만 바꾸면 같은 공식을 x·y·크기·회전에 모두 재사용할 수 있음을 예고합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="완성된 엔트리 작품">
+                <p class="eyebrow">07 · 먼저 완성작 실행</p>
+                <div class="split equal">
+                    <div class="download-callout">
+                        <h2>실제로 움직이는<br><span class="accent">엔트리 작품</span></h2>
+                        <p>파일 열기 → 시작하기 → 네 공 비교</p>
+                        <div class="action-row">
+                            <a class="button primary" href="downloads/ease-lab_007.ent" download="이징함수_실험실.ent">⬇ .ent 다운로드</a>
+                            <a class="button" href="source/entry/ease-lab-spec.mjs" download>코드 생성 원본</a>
+                        </div>
+                    </div>
+                    <img class="project-shot" src="assets/ease-lab-stage.png" alt="엔트리 이징 함수 실험실 실행 화면">
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>5분</strong> 학생들이 완성 파일을 내려받아 먼저 실행하게 합니다. 네 공이 모두 같은 시점에 같은 도착점에 도착하는지 확인합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="하나의 시계가 모두를 움직인다">
+                <p class="eyebrow">08 · 공통 제어 코드</p>
+                <h2>하나의 시계 <span class="accent">t</span>를 네 공에게 보낸다</h2>
+                <div class="controller-layout">
+                    <div class="controller-image-wrap">
+                        <img class="block-image" src="assets/blocks/01-controller.png" alt="시간 비율을 계산하고 위치 계산 신호를 보내는 엔트리 블록">
+                    </div>
+                    <div class="numbered-callouts">
+                        <p><strong>0으로 준비</strong><br><span class="muted">단계와 t 초기화</span></p>
+                        <p><strong>40번 반복</strong><br><span class="muted">기다리고 t 계산</span></p>
+                        <p><strong>신호 보내기</strong><br><span class="muted">모든 공이 같은 t 사용</span></p>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p><strong>6분</strong> 실제 `.ent`에서 추출한 블록 이미지입니다. 제어 오브젝트는 위치를 직접 정하지 않고 t만 계산해 ‘위치 계산’ 신호를 보냅니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="일정하게 움직이기">
+                <p class="eyebrow">09 · LINEAR</p>
+                <h2>① 일정하게 — <span class="accent">p = t</span></h2>
+                <div class="easing-layout" data-easing="linear">
+                    <div class="stack">
+                        <p class="lead">시간이 간 만큼<br>똑같이 이동합니다.</p>
+                        <div class="block-strip"><img class="block-image" src="assets/blocks/02-linear.png" alt="p를 t로 정하고 x 위치를 계산하는 엔트리 블록"></div>
+                    </div>
+                    <div class="curve-panel">
+                        <svg class="curve-svg" viewBox="0 0 400 360" role="img" aria-label="일정한 움직임 그래프">
+                            <g class="curve-grid"><line x1="48" y1="179" x2="360" y2="179"/><line x1="204" y1="28" x2="204" y2="330"/></g>
+                            <path class="curve-axis" d="M48 28V330H360" fill="none"/>
+                            <path class="curve-line" d=""/><line class="curve-guide" data-guide-x/><line class="curve-guide" data-guide-y/><circle class="curve-dot" r="10"/>
+                            <text x="365" y="337" fill="#9caeca" font-size="18">t</text><text x="34" y="24" fill="#9caeca" font-size="18">p</text>
+                        </svg>
+                        <div class="curve-readout"><span>t = <span data-curve-t>0.50</span></span><strong>p = <span data-curve-p>0.50</span></strong></div>
+                        <input type="range" min="0" max="1" step="0.01" value="0.5" data-curve-range aria-label="시간 비율 t">
+                        <button class="button" type="button" data-curve-play>▶ 움직이기</button>
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> 기준이 되는 움직임입니다. 그래프가 대각선이고, t=0.5일 때 p도 0.5입니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="천천히 출발하기">
+                <p class="eyebrow">10 · EASE IN</p>
+                <h2>② 천천히 출발 — <span class="pink">p = t × t</span></h2>
+                <div class="easing-layout" data-easing="easeIn">
+                    <div class="stack">
+                        <p class="lead">처음엔 조금 움직이고,<br>갈수록 빨라집니다.</p>
+                        <div class="block-strip"><img class="block-image" src="assets/blocks/03-ease-in.png" alt="p를 t 곱하기 t로 계산하는 엔트리 블록"></div>
+                    </div>
+                    <div class="curve-panel">
+                        <svg class="curve-svg" viewBox="0 0 400 360" role="img" aria-label="천천히 출발하는 이징 그래프">
+                            <g class="curve-grid"><line x1="48" y1="179" x2="360" y2="179"/><line x1="204" y1="28" x2="204" y2="330"/></g>
+                            <path class="curve-axis" d="M48 28V330H360" fill="none"/>
+                            <path class="curve-line" d=""/><line class="curve-guide" data-guide-x/><line class="curve-guide" data-guide-y/><circle class="curve-dot" r="10"/>
+                            <text x="365" y="337" fill="#9caeca" font-size="18">t</text><text x="34" y="24" fill="#9caeca" font-size="18">p</text>
+                        </svg>
+                        <div class="curve-readout"><span>t = <span data-curve-t>0.50</span></span><strong>p = <span data-curve-p>0.25</span></strong></div>
+                        <input type="range" min="0" max="1" step="0.01" value="0.5" data-curve-range aria-label="시간 비율 t">
+                        <button class="button" type="button" data-curve-play>▶ 움직이기</button>
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> 0과 1 사이의 수는 자기 자신을 곱하면 더 작아집니다. 그래서 초반 p가 작고, 출발이 느립니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="천천히 도착하기">
+                <p class="eyebrow">11 · EASE OUT</p>
+                <h2>③ 천천히 도착 — <span class="yellow">p = 1 − (1−t)²</span></h2>
+                <div class="easing-layout" data-easing="easeOut">
+                    <div class="stack">
+                        <p class="lead">처음엔 빠르게 움직이고,<br>도착하며 부드럽게 멈춥니다.</p>
+                        <div class="block-strip"><img class="block-image" src="assets/blocks/04-ease-out.png" alt="천천히 도착하는 진행률을 계산하는 엔트리 블록"></div>
+                    </div>
+                    <div class="curve-panel">
+                        <svg class="curve-svg" viewBox="0 0 400 360" role="img" aria-label="천천히 도착하는 이징 그래프">
+                            <g class="curve-grid"><line x1="48" y1="179" x2="360" y2="179"/><line x1="204" y1="28" x2="204" y2="330"/></g>
+                            <path class="curve-axis" d="M48 28V330H360" fill="none"/>
+                            <path class="curve-line" d=""/><line class="curve-guide" data-guide-x/><line class="curve-guide" data-guide-y/><circle class="curve-dot" r="10"/>
+                            <text x="365" y="337" fill="#9caeca" font-size="18">t</text><text x="34" y="24" fill="#9caeca" font-size="18">p</text>
+                        </svg>
+                        <div class="curve-readout"><span>t = <span data-curve-t>0.50</span></span><strong>p = <span data-curve-p>0.75</span></strong></div>
+                        <input type="range" min="0" max="1" step="0.01" value="0.5" data-curve-range aria-label="시간 비율 t">
+                        <button class="button" type="button" data-curve-play>▶ 움직이기</button>
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> t를 뒤집어 남은 시간 1−t를 만든 뒤 제곱하고 다시 뒤집습니다. 계산 순서를 블록의 괄호 모양으로 짚습니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="출발과 도착을 모두 부드럽게">
+                <p class="eyebrow">12 · EASE IN–OUT</p>
+                <h2>④ 출발도 도착도 — <span class="mint">두 구간</span>으로 나눈다</h2>
+                <div class="easing-layout" data-easing="easeInOut">
+                    <div>
+                        <div class="formula">t &lt; 0.5 → 2t²</div>
+                        <div class="formula" style="margin-top:1.2cqh">t ≥ 0.5 → 1−2(1−t)²</div>
+                        <p class="lead" style="margin-top:2cqh">처음엔 가속, 중간부터 감속.</p>
+                    </div>
+                    <div class="curve-panel">
+                        <svg class="curve-svg" viewBox="0 0 400 360" role="img" aria-label="출발과 도착이 모두 느린 이징 그래프">
+                            <g class="curve-grid"><line x1="48" y1="179" x2="360" y2="179"/><line x1="204" y1="28" x2="204" y2="330"/></g>
+                            <path class="curve-axis" d="M48 28V330H360" fill="none"/>
+                            <path class="curve-line" d=""/><line class="curve-guide" data-guide-x/><line class="curve-guide" data-guide-y/><circle class="curve-dot" r="10"/>
+                            <text x="365" y="337" fill="#9caeca" font-size="18">t</text><text x="34" y="24" fill="#9caeca" font-size="18">p</text>
+                        </svg>
+                        <div class="curve-readout"><span>t = <span data-curve-t>0.50</span></span><strong>p = <span data-curve-p>0.50</span></strong></div>
+                        <input type="range" min="0" max="1" step="0.01" value="0.5" data-curve-range aria-label="시간 비율 t">
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> 중간 0.5를 기준으로 수식을 둘로 나눕니다. 완벽히 외우게 하기보다 ‘전반에는 가속, 후반에는 감속’이라는 모양을 이해시키면 충분합니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="양쪽 천천히 엔트리 코드">
+                <p class="eyebrow">13 · BLOCK CODE</p>
+                <h2>조건문 하나로 <span class="mint">전반·후반</span> 수식을 바꾼다</h2>
+                <div class="ease-inout-code">
+                    <img class="block-image" src="assets/blocks/05-ease-in-out.png" alt="출발과 도착이 모두 느린 이징을 조건문으로 계산하는 엔트리 블록">
+                </div>
+                <p class="code-note"><span>위쪽: t &lt; 0.5</span><span>아래쪽: t ≥ 0.5</span><span>마지막 위치 공식은 공통</span></p>
+                <aside class="speaker-notes"><p><strong>4분</strong> 실제 `.ent` 작품에서 뽑은 블록입니다. 조건문 안에서는 p만 계산하고, x 위치를 정하는 마지막 블록은 조건문 밖에서 한 번만 실행합니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="중간 시점 체크">
+                <p class="eyebrow">14 · CHECKPOINT</p>
+                <h2><span class="yellow">t = 0.5</span>일 때, 공은 얼마나 갔을까?</h2>
+                <div class="midpoint-table" aria-label="각 이징의 중간 시점 진행률 비교">
+                    <span class="midpoint-name">일정하게</span><div class="midpoint-track" style="--p:50%;--color:var(--entry)"></div><span class="midpoint-value" style="--color:var(--entry)">50%</span>
+                    <span class="midpoint-name">천천히 출발</span><div class="midpoint-track" style="--p:25%;--color:var(--pink)"></div><span class="midpoint-value" style="--color:var(--pink)">25%</span>
+                    <span class="midpoint-name">천천히 도착</span><div class="midpoint-track" style="--p:75%;--color:var(--yellow)"></div><span class="midpoint-value" style="--color:var(--yellow)">75%</span>
+                    <span class="midpoint-name">양쪽 천천히</span><div class="midpoint-track" style="--p:50%;--color:var(--mint)"></div><span class="midpoint-value" style="--color:var(--mint)">50%</span>
+                </div>
+                <p class="checkpoint-question">질문: 50%라는 위치만 보고 속도까지 알 수 있을까?</p>
+                <aside class="speaker-notes"><p><strong>3분</strong> 양쪽 천천히와 일정하게는 중간 위치가 같지만 속도는 다릅니다. 한 장면의 위치만이 아니라 앞뒤 변화까지 봐야 한다는 점을 확인합니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="실습 1 움직임 뼈대">
+                <p class="eyebrow">15 · 실습 1</p>
+                <h2>먼저 <span class="accent">p = t</span>로 움직임 뼈대를 완성한다</h2>
+                <div class="timer" data-timer data-minutes="10"><output>10:00</output><button class="button" type="button" data-timer-start>시작</button><button class="button" type="button" data-timer-reset>초기화</button></div>
+                <div class="build-steps">
+                    <div class="build-step"><strong>변수 준비</strong><span>전체 시간 2<br>반복 횟수 40<br>단계와 t는 0</span></div>
+                    <div class="build-step"><strong>시계 만들기</strong><span>2÷40초 기다리기<br>단계 1 더하기<br>t=단계÷40</span></div>
+                    <div class="build-step"><strong>위치 연결</strong><span>p=t<br>x=시작+(끝−시작)×p<br>끝까지 확인</span></div>
+                </div>
+                <aside class="speaker-notes"><p><strong>10분</strong> 수식 욕심을 내기 전에 선형 이동이 정확히 되는지 확인합니다. 어려운 학생에게는 완성 `.ent` 파일을 열고 변수와 블록 위치를 찾아보게 해도 좋습니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="실습 2 이징 선택">
+                <p class="eyebrow">16 · 실습 2</p>
+                <h2>p를 계산하는 <span class="accent">한 줄</span>만 바꿔 보자</h2>
+                <div class="timer" data-timer data-minutes="12"><output>12:00</output><button class="button" type="button" data-timer-start>시작</button><button class="button" type="button" data-timer-reset>초기화</button></div>
+                <div data-formula-picker>
+                    <div class="formula-choice">
+                        <button type="button" data-formula-choice="linear"><strong>일정하게</strong><code>p = t</code></button>
+                        <button type="button" data-formula-choice="easeIn"><strong>천천히 출발</strong><code>p = t × t</code></button>
+                        <button type="button" data-formula-choice="easeOut"><strong>천천히 도착</strong><code>p = 1 − (1−t)²</code></button>
+                        <button type="button" data-formula-choice="easeInOut"><strong>양쪽 천천히</strong><code>t &lt; 0.5 ? 앞 : 뒤</code></button>
+                    </div>
+                    <p class="choice-preview" data-choice-preview></p>
+                </div>
+                <aside class="speaker-notes"><p><strong>12분</strong> 학생마다 하나를 선택해 기존 p=t 블록만 교체합니다. 빨리 끝난 학생은 두 번째 공을 복제해 나란히 비교하게 합니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="느낌에 맞는 이징 고르기">
+                <p class="eyebrow">17 · 적용 퀴즈</p>
+                <h2>장면의 <span class="yellow">느낌</span>에 맞는 이징은?</h2>
+                <div class="match-board" data-matching>
+                    <div class="match-row" data-correct="easeOut" data-success="빠르게 나타나고 천천히 멈추면 조작이 편안해요.">
+                        <span class="match-scene">메뉴가 나타남</span><div class="match-options"><button type="button" data-match-choice="easeIn">출발</button><button type="button" data-match-choice="easeOut">도착</button><button type="button" data-match-choice="easeInOut">양쪽</button></div><span class="match-feedback"></span>
+                    </div>
+                    <div class="match-row" data-correct="easeIn" data-success="처음엔 천천히, 아래로 갈수록 빨라져 낙하 느낌이 나요.">
+                        <span class="match-scene">공이 떨어짐</span><div class="match-options"><button type="button" data-match-choice="easeIn">출발</button><button type="button" data-match-choice="easeOut">도착</button><button type="button" data-match-choice="easeInOut">양쪽</button></div><span class="match-feedback"></span>
+                    </div>
+                    <div class="match-row" data-correct="easeInOut" data-success="출발과 도착이 모두 부드러워 화면 이동에 자연스러워요.">
+                        <span class="match-scene">카메라 이동</span><div class="match-options"><button type="button" data-match-choice="easeIn">출발</button><button type="button" data-match-choice="easeOut">도착</button><button type="button" data-match-choice="easeInOut">양쪽</button></div><span class="match-feedback"></span>
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>5분</strong> 정답보다 이유가 중요합니다. 메뉴는 ease-out, 낙하는 ease-in, 카메라는 ease-in-out을 기본 답으로 두되 다른 선택도 장면 의도가 분명하면 인정합니다.</p></aside>
+            </section>
+
+            <section class="slide" data-title="도착점 오차 디버깅">
+                <p class="eyebrow">18 · 디버깅</p>
+                <h2>거의 도착했는데 <span class="pink">살짝 모자란다?</span></h2>
+                <div class="debug-demo" data-debug-demo>
+                    <div>
+                        <div class="debug-track"><span class="debug-ball"></span></div>
+                        <p class="lead" data-debug-status>40번 직전에 종료 → 도착점에서 살짝 멈춤</p>
+                        <div class="action-row">
+                            <button class="button" type="button" data-debug-mode="bug">오류 보기</button>
+                            <button class="button" type="button" data-debug-mode="fixed">수정 보기</button>
+                            <button class="button" type="button" data-debug-replay>↺ 재생</button>
+                        </div>
+                    </div>
+                    <div class="debug-list">
+                        <p><strong>마지막 t를 확인</strong><br><span class="muted">정확히 1인가?</span></p>
+                        <p><strong>같은 조건으로 비교</strong><br><span class="muted">시간·거리·반복 횟수</span></p>
+                        <p><strong>너무 끊기면</strong><br><span class="muted">반복 횟수를 늘리기</span></p>
+                    </div>
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> 반복문 안에서 0부터 39까지만 계산하면 t=1을 놓칠 수 있습니다. 완성 코드처럼 반복 뒤에 마지막 값을 보장하는 습관을 강조합니다.</p></aside>
+            </section>
+
+            <section class="slide mission" data-title="나만의 움직임 미션">
+                <p class="eyebrow">19 · 나만의 게임에 적용</p>
+                <h2>이제 움직임을 <span class="accent">디자인</span>할 차례</h2>
+                <div class="timer" data-timer data-minutes="15"><output>15:00</output><button class="button" type="button" data-timer-start>시작</button><button class="button" type="button" data-timer-reset>초기화</button></div>
+                <p class="mission-line"><span>x · y · 크기 · 회전</span> 중 하나에<br><span>이징 한 가지</span>를 넣고 이유를 설명하세요.</p>
+                <img class="mission-bot" src="assets/brand/entrybot-idea.png" alt="아이디어를 떠올린 엔트리봇">
+                <aside class="speaker-notes"><p><strong>15분</strong> 결과물의 규모보다 선택 이유를 보게 합니다. 예: 점프 y에 ease-out/ease-in을 나눠 쓰기, 메뉴 크기에 ease-out 적용하기.</p></aside>
+            </section>
+
+            <section class="slide" data-title="정리와 출구 티켓">
+                <p class="eyebrow">20 · 정리</p>
+                <h2>내 움직임의 <span class="accent">의도</span>를 한 문장으로</h2>
+                <div class="exit-ticket">
+                    <div>
+                        <p class="exit-sentence">나는 <span>장면</span>에 <span>이징</span>을 썼다.<br>왜냐하면 <span>느낌</span>을 만들고 싶었기 때문이다.</p>
+                        <div class="three-words"><b>t</b><i>→</i><b>p</b><i>→</i><b>x</b><span>시간 → 진행률 → 실제 값</span></div>
+                        <div class="action-row" style="margin-top:2.5cqh">
+                            <a class="button primary" href="downloads/ease-lab_007.ent" download="이징함수_실험실.ent">⬇ 실습 파일 다시 받기</a>
+                            <a class="button" href="../">다른 수업 보기</a>
+                        </div>
+                    </div>
+                    <img class="exit-bot" src="assets/brand/entrybot-good.png" alt="좋다고 엄지를 든 엔트리봇">
+                </div>
+                <aside class="speaker-notes"><p><strong>4분</strong> 두세 명이 문장을 발표하게 합니다. 마지막으로 “이징은 같은 시간에서 진행률을 바꾸는 규칙”을 함께 말하고 마칩니다.</p></aside>
+            </section>
+        </div>
+    </main>
+
+    <nav class="deck-controls" aria-label="슬라이드 이동">
+        <button type="button" data-deck-previous title="이전 슬라이드 (←)">←</button>
+        <span class="deck-count" data-deck-count aria-live="polite">1 / 21</span>
+        <button type="button" data-deck-next title="다음 슬라이드 (→)">→</button>
+    </nav>
+    <div class="deck-progress-track" aria-hidden="true"><div class="deck-progress" data-deck-progress></div></div>
+    <aside class="notes-panel" data-deck-notes aria-label="발표자 노트"></aside>
+</body>
+</html>

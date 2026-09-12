@@ -1,0 +1,11 @@
+{
+  "name": "ppt-205",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "validate": "node scripts/validate-site.mjs && node --check shared/deck.js && node --check shared/catalog.js && node --check Ease/deck.js",
+    "qa": "node scripts/qa-slides.mjs"
+  }
+}
