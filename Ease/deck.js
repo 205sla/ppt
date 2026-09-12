@@ -89,10 +89,10 @@
         const buttons = [...root.querySelectorAll('[data-dot-ease]')];
         const label = root.querySelector('[data-dot-label]');
         const descriptions = {
-            linear: '간격이 같다 → 속도가 일정하다',
-            easeIn: '앞쪽 간격이 좁다 → 천천히 출발한다',
-            easeOut: '뒤쪽 간격이 좁다 → 천천히 도착한다',
-            easeInOut: '양끝 간격이 좁다 → 출발·도착이 부드럽다',
+            linear: '점 사이가 같으면 속도도 같다.',
+            easeIn: '앞쪽 점이 모여 있으면 천천히 출발한다.',
+            easeOut: '뒤쪽 점이 모여 있으면 천천히 도착한다.',
+            easeInOut: '양쪽 점이 모여 있으면 출발과 도착이 모두 느리다.',
         };
         const dots = Array.from({ length: 11 }, (_, index) => {
             const dot = document.createElement('span');
@@ -146,14 +146,15 @@
         const range = root.querySelector('[data-position-range]');
         const ball = root.querySelector('.position-ball');
         const output = root.querySelector('[data-position-output]');
-        const start = -120;
-        const end = 230;
+        const start = Number(root.dataset.start ?? -100);
+        const end = Number(root.dataset.end ?? 100);
+        const symbol = root.dataset.symbol || 'p';
 
         const setProgress = (value) => {
             const p = clamp01(Number(value));
             const x = start + (end - start) * p;
             ball.style.left = `${p * 100}%`;
-            output.textContent = `x = -120 + 350 × ${p.toFixed(2)} = ${x.toFixed(1)}`;
+            output.textContent = `x = ${start} + ${end - start} × ${symbol}(${p.toFixed(2)}) = ${x.toFixed(1)}`;
         };
         range.addEventListener('input', (event) => setProgress(event.target.value));
         setProgress(range.value);
@@ -223,7 +224,7 @@
             linear: '연습용: 먼저 p=t로 전체 구조가 움직이는지 확인하세요.',
             easeIn: '무거운 물체가 출발하거나 떨어지기 시작할 때 잘 어울려요.',
             easeOut: '버튼·창이 나타나며 자연스럽게 멈출 때 잘 어울려요.',
-            easeInOut: '카메라나 캐릭터가 이동할 때 가장 무난하게 부드러워요.',
+            easeInOut: '출발과 도착을 모두 부드럽게 만들고 싶을 때 골라요.',
         };
         buttons.forEach((button) => button.addEventListener('click', () => {
             buttons.forEach((item) => item.dataset.active = String(item === button));

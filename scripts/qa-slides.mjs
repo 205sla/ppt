@@ -42,13 +42,23 @@ page.on('console', (message) => {
 try {
     await waitForServer();
     await page.goto(`${baseUrl}/Ease/`, { waitUntil: 'networkidle' });
-    await page.waitForFunction(() => window.ppt205Deck?.slides?.length === 21);
+    await page.waitForFunction(() => window.ppt205Deck?.slides?.length === 22);
     await page.waitForFunction(() => [...document.images].every((image) => image.complete && image.naturalWidth > 0));
     const slideCount = await page.evaluate(() => window.ppt205Deck.slides.length);
 
-    const downloadResponse = await page.request.get(`${baseUrl}/Ease/downloads/ease-lab_007.ent`);
-    if (!downloadResponse.ok() || (await downloadResponse.body()).length < 10_000) {
-        throw new Error('.ent 다운로드 파일 응답이 올바르지 않습니다.');
+    const entryFiles = [
+        'ease-step1_001.ent',
+        'ease-step2_001.ent',
+        'ease-linear_001.ent',
+        'ease-in_001.ent',
+        'ease-out_001.ent',
+        'ease-in-out_001.ent',
+    ];
+    for (const file of entryFiles) {
+        const downloadResponse = await page.request.get(`${baseUrl}/Ease/downloads/${file}`);
+        if (!downloadResponse.ok() || (await downloadResponse.body()).length < 8_000) {
+            throw new Error(`${file} 다운로드 응답이 올바르지 않습니다.`);
+        }
     }
 
     const layoutProblems = [];
@@ -116,7 +126,7 @@ try {
         if (layoutProblems.length) console.error('레이아웃 문제:', JSON.stringify(layoutProblems, null, 2));
         process.exitCode = 1;
     } else {
-        console.log(`슬라이드 QA 통과: ${slideCount}장, 이미지, 키보드, 노트, 경주, 퀴즈, .ent 다운로드`);
+        console.log(`슬라이드 QA 통과: ${slideCount}장, 이미지, 키보드, 노트, 경주, 퀴즈, 단계별 .ent 다운로드`);
         console.log(`콘택트 시트: ${path.join(root, 'test-results', 'contact-sheet.png')}`);
     }
 } finally {

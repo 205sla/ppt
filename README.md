@@ -4,8 +4,9 @@
 
 ## 현재 슬라이드
 
-- `Ease/` — 중학생 엔트리 수업용 **이징 함수로 움직임 디자인하기** (21장, 약 90분)
-- 실제 실행 검증을 마친 `.ent` 파일과 그 작품에서 추출한 엔트리 블록 PNG 포함
+- `Ease/` — 중학교 1학년 엔트리 수업용 **이징 함수로 움직임 만들기** (22장, 약 90분)
+- `t×100`부터 시작해 좌표 범위, 이동 함수, 네 가지 이징으로 이어지는 단계식 구성
+- 실제 실행 검증을 마친 단계별 `.ent` 6개와 각 작품에서 추출한 엔트리 블록 PNG 포함
 - 경로: `https://ppt.205.kr/Ease/` (DNS 연결 전: `https://205sla.github.io/ppt/Ease/`)
 
 ## 발표 조작
@@ -33,16 +34,17 @@ npm run serve
 3. `decks.json`에 폴더명(`slug`), 제목, 설명을 한 줄 추가합니다.
 4. `npm run validate` 후 `main` 브랜치에 푸시하면 Pages가 자동 배포합니다.
 
-## 이징 엔트리 작품 재생성
+## 이징 엔트리 작품 재생성과 검증
 
-`Ease/source/entry/ease-lab-spec.mjs`는 `MYentry-game`의 `tools/make-ent.mjs` 형식에 맞춘 독립형 spec입니다. 원본 저장소의 규칙에 따라 기존 `.ent`를 덮어쓰지 말고 다음 번호로 생성합니다.
+`Ease/source/entry/ease-lab-spec.mjs`는 여섯 단계의 공통 생성 원본입니다. 기본 명령은 기존 `.ent`를 덮어쓰지 않으므로 새 수업 버전은 파일 번호를 올려 관리합니다.
 
 ```powershell
-node C:\Users\young\prg\ENTRY\apps\MYentry-game\tools\make-ent.mjs --check Ease\source\entry\ease-lab-spec.mjs
-node C:\Users\young\prg\ENTRY\apps\MYentry-game\tools\make-ent.mjs Ease\source\entry\ease-lab-spec.mjs Ease\downloads\ease-lab_008.ent
+npm run entry:build
+npm run entry:verify
+npm run entry:blocks
 ```
 
-검증·블록 이미지 추출 스크립트의 fixture 파일명도 새 번호로 바꾼 뒤 실행합니다. 두 스크립트는 `MYENTRY_ROOT` 환경 변수로 참조 저장소 위치를 바꿀 수 있습니다.
+같은 번호의 파일을 의도적으로 다시 만들 때만 `node Ease/source/entry/build-ease-files.mjs --force`를 사용합니다. 세 스크립트는 `MYENTRY_ROOT` 환경 변수로 MYentry 저장소 위치를 바꿀 수 있습니다. 실행 검증과 블록 이미지 추출에는 `MYentry-game` 로컬 서버가 필요합니다.
 
 ## 배포 구조
 

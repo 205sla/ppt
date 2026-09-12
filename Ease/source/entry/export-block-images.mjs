@@ -6,7 +6,7 @@ import url from 'node:url';
 
 const here = path.dirname(url.fileURLToPath(import.meta.url));
 const myEntryRoot = process.env.MYENTRY_ROOT || 'C:/Users/young/prg/ENTRY/apps/MYentry-game';
-const fixture = path.resolve(here, '../../downloads/ease-lab_007.ent');
+const downloadDir = path.resolve(here, '../../downloads');
 const outputDir = path.resolve(here, '../../assets/blocks');
 
 const { bootEditor, loadFixture } = await import(
@@ -14,33 +14,45 @@ const { bootEditor, loadFixture } = await import(
 );
 
 const targets = [
-    { objectId: 'controller', threadIndex: 0, file: '01-controller.png' },
-    { objectId: 'linear_ball', threadIndex: 1, file: '02-linear.png' },
-    { objectId: 'ease_in_ball', threadIndex: 1, file: '03-ease-in.png' },
-    { objectId: 'ease_out_ball', threadIndex: 1, file: '04-ease-out.png' },
-    { objectId: 'ease_inout_ball', threadIndex: 1, file: '05-ease-in-out.png' },
+    { fixture: 'ease-step1_001.ent', objectId: 'ball', threadIndex: 0, file: '01-step1.png' },
+    { fixture: 'ease-step2_001.ent', objectId: 'ball', threadIndex: 0, file: '02-step2.png' },
+    { fixture: 'ease-linear_001.ent', objectId: 'ball', threadIndex: 0, file: '03-linear-main.png' },
+    { fixture: 'ease-in_001.ent', objectId: 'ball', threadIndex: 0, file: '05-ease-in.png' },
+    { fixture: 'ease-out_001.ent', objectId: 'ball', threadIndex: 0, file: '06-ease-out.png' },
+    { fixture: 'ease-in-out_001.ent', objectId: 'ball', threadIndex: 0, file: '07-ease-in-out.png' },
+    { fixture: 'ease-linear_001.ent', functionId: 'move', threadIndex: 0, file: '04-move-function.png' },
 ];
 
 fs.mkdirSync(outputDir, { recursive: true });
 
-const { browser, page, pageErrors } = await bootEditor({ viewport: { width: 1600, height: 1000 } });
+const { browser, page, pageErrors } = await bootEditor({ viewport: { width: 1700, height: 1050 } });
 
 try {
-    await loadFixture(page, fixture);
-    const images = await page.evaluate(async (requests) => {
-        const result = [];
-        for (const request of requests) {
-            Entry.container.selectObject(request.objectId);
-            await new Promise((resolve) => setTimeout(resolve, 350));
-            const object = Entry.container.getAllObjects().find((item) => item.id === request.objectId);
-            if (!object) throw new Error(`오브젝트를 찾을 수 없음: ${request.objectId}`);
-            const thread = object.script.getThreads()[request.threadIndex];
-            if (!thread) throw new Error(`스크립트를 찾을 수 없음: ${request.objectId}[${request.threadIndex}]`);
+    for (const target of targets) {
+        await loadFixture(page, path.join(downloadDir, target.fixture));
+        const image = await page.evaluate(async (request) => {
+            let thread;
+            if (request.functionId) {
+                const func = Entry.variableContainer.getFunction(request.functionId);
+                if (!func) throw new Error(`함수를 찾을 수 없음: ${request.functionId}`);
+                Entry.Func.edit(func);
+                await new Promise((resolve) => setTimeout(resolve, 800));
+                thread = func.content.getThreads()[request.threadIndex];
+            } else {
+                Entry.container.selectObject(request.objectId);
+                await new Promise((resolve) => setTimeout(resolve, 450));
+                const object = Entry.container.getAllObjects().find((item) => item.id === request.objectId);
+                if (!object) throw new Error(`오브젝트를 찾을 수 없음: ${request.objectId}`);
+                thread = object.script.getThreads()[request.threadIndex];
+            }
+
+            if (!thread) throw new Error(`스크립트를 찾을 수 없음: ${request.file}`);
             const topBlock = thread.getBlocks()[0];
             const view = topBlock?.getView?.() || topBlock?.view;
             if (!view || typeof view.getDataUrl !== 'function') {
-                throw new Error(`블록 이미지 API를 찾을 수 없음: ${request.objectId}`);
+                throw new Error(`블록 이미지 API를 찾을 수 없음: ${request.file}`);
             }
+
             const svgImage = await view.getDataUrl();
             const svgDocument = new DOMParser().parseFromString(svgImage.data, 'image/svg+xml');
             for (const imageElement of svgDocument.querySelectorAll('image')) {
@@ -59,6 +71,7 @@ try {
                 imageElement.setAttribute('href', inlineUrl);
                 imageElement.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
             }
+
             const inlinedSvg = new XMLSerializer().serializeToString(svgDocument);
             const svgBlob = new Blob([inlinedSvg], { type: 'image/svg+xml;charset=utf-8' });
             const svgUrl = URL.createObjectURL(svgBlob);
@@ -77,19 +90,16 @@ try {
             context.drawImage(bitmap, 0, 0, svgImage.width, svgImage.height);
             const dataUrl = canvas.toDataURL('image/png');
             URL.revokeObjectURL(svgUrl);
-            result.push({ ...request, dataUrl, blockTypes: thread.getBlocks().map((block) => block.type) });
-        }
-        return result;
-    }, targets);
+            return {
+                dataUrl,
+                blockTypes: thread.getBlocks().map((block) => block.type),
+            };
+        }, target);
 
-    for (const image of images) {
         const match = /^data:image\/png(?:;[^,]*)?;base64,(.+)$/s.exec(image.dataUrl);
-        if (!match) {
-            throw new Error(`${image.file}: PNG 데이터 URL 형식이 아닙니다. (${typeof image.dataUrl}: ${JSON.stringify(image.dataUrl).slice(0, 500)})`);
-        }
-        const destination = path.join(outputDir, image.file);
-        fs.writeFileSync(destination, Buffer.from(match[1], 'base64'));
-        console.log(`${image.file}  ${image.blockTypes.join(' → ')}`);
+        if (!match) throw new Error(`${target.file}: PNG 데이터 URL 형식이 아닙니다.`);
+        fs.writeFileSync(path.join(outputDir, target.file), Buffer.from(match[1], 'base64'));
+        console.log(`${target.file}  ${image.blockTypes.join(' -> ')}`);
     }
 
     if (pageErrors.length) {

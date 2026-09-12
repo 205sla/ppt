@@ -41,7 +41,7 @@ for (const file of files.filter((candidate) => candidate.endsWith('.html'))) {
     if (file.endsWith(`${path.sep}Ease${path.sep}index.html`)) {
         const slideCount = (content.match(/<section class="slide/g) || []).length;
         const noteCount = (content.match(/class="speaker-notes"/g) || []).length;
-        if (slideCount !== 21) failures.push(`Ease/index.html → 슬라이드 수 ${slideCount}, 예상 21`);
+        if (slideCount !== 22) failures.push(`Ease/index.html → 슬라이드 수 ${slideCount}, 예상 22`);
         if (noteCount !== slideCount) failures.push(`Ease/index.html → 발표자 노트 ${noteCount}/${slideCount}`);
     }
 }
@@ -57,4 +57,4 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log(`정적 사이트 검증 통과: 파일 ${files.length}개, 내부 참조 ${checkedLinks}개, Ease 슬라이드 21장`);
+console.log(`정적 사이트 검증 통과: 파일 ${files.length}개, 내부 참조 ${checkedLinks}개, Ease 슬라이드 22장`);

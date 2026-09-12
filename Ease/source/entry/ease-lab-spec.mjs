@@ -1,69 +1,61 @@
-// 이징 함수 수업용 엔트리 작품
-// MYentry-game의 tools/make-ent.mjs에서 바로 읽을 수 있는 독립형 spec입니다.
+// 중학교 1학년 이징 수업용 단계별 엔트리 작품
+// 핵심 흐름: t 만들기 -> 좌표 범위 바꾸기 -> p와 이동 함수 분리 -> p 식만 교체하기
 
 const num = (value) => ({ type: 'number', params: [String(value)] });
-const text = (value) => ({ type: 'text', params: [String(value)] });
 const getVar = (id) => ({ type: 'get_variable', params: [id, null] });
 const setVar = (id, value) => ({ type: 'set_variable', params: [id, value, null] });
 const changeVar = (id, value) => ({ type: 'change_variable', params: [id, value, null] });
 const calc = (left, operator, right) => ({
     type: 'calc_basic',
-    params: [left, { '+': 'PLUS', '-': 'MINUS', '*': 'MULTI', '/': 'DIVIDE' }[operator], right],
+    params: [left, { '+': 'PLUS', '-': 'MINUS', '*': 'MULTI' }[operator], right],
 });
-const cmp = (left, operator, right) => ({
+const compare = (left, operator, right) => ({
     type: 'boolean_basic_operator',
-    params: [left, { '<': 'LESS', '>': 'GREATER', '==': 'EQUAL' }[operator], right],
+    params: [left, { '<': 'LESS' }[operator], right],
 });
 const whenRun = () => ({ type: 'when_run_button_click', params: [null] });
-const whenMessage = (id) => ({ type: 'when_message_cast', params: [null, id] });
 const repeat = (count, body) => ({
     type: 'repeat_basic',
     params: [count, null],
     statements: [body],
 });
+const locateX = (x) => ({ type: 'locate_x', params: [x, null] });
 const ifElse = (condition, yes, no) => ({
     type: 'if_else',
     params: [condition, null, null],
     statements: [yes, no],
 });
-const wait = (seconds) => ({ type: 'wait_second', params: [seconds, null] });
-const locateX = (x) => ({ type: 'locate_x', params: [x, null] });
-const locateXY = (x, y) => ({ type: 'locate_xy', params: [x, y, null] });
-const sendMessageWait = (id) => ({ type: 'message_cast_wait', params: [id, null] });
-const writeText = (value) => ({ type: 'text_write', params: [value, null] });
-const combine = (left, right) => ({
-    type: 'combine_something',
-    params: [null, left, null, right, null],
-});
+const stringParam = (id) => ({ type: `stringParam_${id}`, params: [] });
+const callFunction = (id, ...args) => ({ type: `func_${id}`, params: args });
 
-const START_X = -120;
-const END_X = 230;
+const START_X = -100;
+const END_X = 100;
 
-const boardSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <rect width="640" height="360" rx="0" fill="#10182B"/>
-  <g stroke="#263554" stroke-width="1" opacity="0.55">
-    <path d="M0 60H640M0 120H640M0 180H640M0 240H640M0 300H640"/>
-    <path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360"/>
-  </g>
-  <g stroke="#6C7FA8" stroke-width="3" stroke-linecap="round" opacity="0.8">
-    <path d="M200 90H550M200 150H550M200 210H550M200 270H550"/>
-  </g>
-  <g fill="#22B6FF">
-    <circle cx="200" cy="90" r="5"/><circle cx="200" cy="150" r="5"/>
-    <circle cx="200" cy="210" r="5"/><circle cx="200" cy="270" r="5"/>
-  </g>
-  <g fill="#8B0029">
-    <circle cx="550" cy="90" r="6"/><circle cx="550" cy="150" r="6"/>
-    <circle cx="550" cy="210" r="6"/><circle cx="550" cy="270" r="6"/>
-  </g>
-</svg>`;
+function ballSvg(fill = '#22B6FF') {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="36" r="24" fill="#050A16" opacity="0.3"/>
+      <circle cx="32" cy="30" r="24" fill="${fill}" stroke="#FFFFFF" stroke-width="4"/>
+      <circle cx="24" cy="21" r="7" fill="#FFFFFF" opacity="0.62"/>
+    </svg>`;
+}
 
-function ballSvg(fill) {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-      <circle cx="24" cy="26" r="18" fill="#050A16" opacity="0.35"/>
-      <circle cx="24" cy="22" r="18" fill="${fill}" stroke="#FFFFFF" stroke-width="3"/>
-      <circle cx="18" cy="16" r="5" fill="#FFFFFF" opacity="0.62"/>
+function trackSvg(start, end) {
+    const toCanvas = (x) => x + 320;
+    const startCanvas = toCanvas(start);
+    const endCanvas = toCanvas(end);
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+      <rect width="640" height="360" fill="#10182B"/>
+      <g stroke="#263554" stroke-width="1" opacity="0.52">
+        <path d="M0 60H640M0 120H640M0 180H640M0 240H640M0 300H640"/>
+        <path d="M80 0V360M160 0V360M240 0V360M320 0V360M400 0V360M480 0V360M560 0V360"/>
+      </g>
+      <path d="M${startCanvas} 180H${endCanvas}" stroke="#6C7FA8" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="${startCanvas}" cy="180" r="9" fill="#22B6FF"/>
+      <circle cx="${endCanvas}" cy="180" r="9" fill="#F72585"/>
+      <g fill="#DCE7FA" font-family="NanumGothic, sans-serif" font-size="20" text-anchor="middle">
+        <text x="${startCanvas}" y="225">${start}</text>
+        <text x="${endCanvas}" y="225">${end}</text>
+      </g>
     </svg>`;
 }
 
@@ -94,166 +86,199 @@ function sprite(id, name, svgString, entity, threads = [[]]) {
     };
 }
 
-function label(id, value, y, { x = -175, width = 130, fontSize = 17, align = 0 } = {}) {
+function label(value) {
     return {
-        id,
+        id: 'lesson_title',
         name: value,
         objectType: 'textBox',
         text: value,
         entity: {
-            x,
-            y,
+            x: -215,
+            y: 100,
             regX: 0,
             regY: 0,
             scaleX: 1,
             scaleY: 1,
             rotation: 0,
             direction: 90,
-            width,
-            height: 34,
-            font: `${fontSize}px NanumGothic`,
+            width: 430,
+            height: 38,
+            font: '23px NanumGothic',
             colour: '#F7FAFF',
             bgColor: 'transparent',
             lineBreak: false,
-            textAlign: align,
+            textAlign: 1,
             visible: true,
         },
         script: [[]],
     };
 }
 
-function positionFrom(progress) {
-    return calc(num(START_X), '+', calc(num(END_X - START_X), '*', progress));
+function moveFunction() {
+    const start = stringParam('strt');
+    const end = stringParam('endx');
+    return {
+        id: 'move',
+        type: 'normal',
+        localVariables: [],
+        useLocalVariables: false,
+        content: [[{
+            type: 'function_create',
+            params: [{
+                type: 'function_field_label',
+                params: [
+                    { __field: '이동하기' },
+                    {
+                        type: 'function_field_string',
+                        params: [
+                            stringParam('strt'),
+                            {
+                                type: 'function_field_label',
+                                params: [
+                                    { __field: '부터' },
+                                    {
+                                        type: 'function_field_string',
+                                        params: [stringParam('endx'), null],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }, null],
+            statements: [[
+                locateX(calc(calc(getVar('p'), '*', calc(end, '-', start)), '+', start)),
+            ]],
+        }]],
+    };
 }
 
-function easingBall({ id, name, y, color, progressVar, progressExpression, branch }) {
-    const formulaBlocks = branch || [setVar(progressVar, progressExpression)];
-    return sprite(id, name, ballSvg(color), {
-        x: START_X,
-        y,
-        width: 48,
-        height: 48,
-    }, [
-        [whenRun(), locateXY(num(START_X), num(y))],
-        [
-            whenMessage('tick'),
-            ...formulaBlocks,
-            locateX(positionFrom(getVar(progressVar))),
-        ],
-    ]);
-}
-
-const oneMinusT = calc(num(1), '-', getVar('time_ratio'));
-
-export default {
-    name: '이징 함수 실험실',
-    messages: [{ id: 'tick', name: '위치 계산' }],
-    variables: [
-        { id: 'start_x', name: '시작 x', value: String(START_X), visible: false },
-        { id: 'end_x', name: '끝 x', value: String(END_X), visible: false },
-        { id: 'duration', name: '전체 시간', value: '2', visible: false },
-        { id: 'steps', name: '반복 횟수', value: '40', visible: false },
-        { id: 'step', name: '단계', value: '0', visible: false },
-        { id: 'time_ratio', name: '시간 비율 t', value: '0', visible: false },
-        { id: 'p_linear', name: '일정하게 p', value: '0', visible: false },
-        { id: 'p_in', name: '천천히 출발 p', value: '0', visible: false },
-        { id: 'p_out', name: '천천히 도착 p', value: '0', visible: false },
-        { id: 'p_inout', name: '양쪽 천천히 p', value: '0', visible: false },
-        { id: 'done', name: '완료', value: '0', visible: false },
-    ],
-    objects: [
-        label('title', '같은 2초, 다른 움직임', 108, { x: -100, width: 320, fontSize: 23 }),
-        label('label_linear', '일정하게', 90),
-        label('label_in', '천천히 출발', 30),
-        label('label_out', '천천히 도착', -30),
-        label('label_inout', '양쪽 천천히', -90),
-
-        {
-            ...label('clock', '시간 비율 t = 0', 108, { x: 182, width: 128, fontSize: 15, align: 2 }),
-            script: [[
-                whenMessage('tick'),
-                writeText(combine(text('시간 비율 t = '), getVar('time_ratio'))),
-            ]],
-        },
-
-        easingBall({
-            id: 'linear_ball',
-            name: '일정하게 공',
-            y: 90,
-            color: '#22B6FF',
-            progressVar: 'p_linear',
-            progressExpression: getVar('time_ratio'),
-        }),
-        easingBall({
-            id: 'ease_in_ball',
-            name: '천천히 출발 공',
-            y: 30,
-            color: '#F72585',
-            progressVar: 'p_in',
-            progressExpression: calc(getVar('time_ratio'), '*', getVar('time_ratio')),
-        }),
-        easingBall({
-            id: 'ease_out_ball',
-            name: '천천히 도착 공',
-            y: -30,
-            color: '#FFD166',
-            progressVar: 'p_out',
-            progressExpression: calc(num(1), '-', calc(oneMinusT, '*', oneMinusT)),
-        }),
-        easingBall({
-            id: 'ease_inout_ball',
-            name: '양쪽 천천히 공',
-            y: -90,
-            color: '#72EFDD',
-            progressVar: 'p_inout',
-            branch: [
-                ifElse(
-                    cmp(getVar('time_ratio'), '<', num(0.5)),
-                    [setVar('p_inout', calc(num(2), '*', calc(getVar('time_ratio'), '*', getVar('time_ratio'))))],
-                    [setVar('p_inout', calc(num(1), '-', calc(num(2), '*', calc(oneMinusT, '*', oneMinusT))))],
-                ),
-            ],
-        }),
-
-        {
-            ...label('controller', '움직임 제어', -145, { x: -230, width: 130, fontSize: 14 }),
-            entity: {
-                ...label('controller_entity', '', 0).entity,
-                x: -230,
-                y: -145,
-                width: 130,
-                height: 24,
-                font: '14px NanumGothic',
-                colour: '#9FB2D8',
-                visible: true,
-            },
-            script: [[
-                whenRun(),
-                setVar('done', num(0)),
-                setVar('step', num(0)),
-                setVar('time_ratio', num(0)),
-                sendMessageWait('tick'),
-                repeat(getVar('steps'), [
-                    wait(calc(getVar('duration'), '/', getVar('steps'))),
-                    changeVar('step', num(1)),
-                    setVar('time_ratio', calc(getVar('step'), '/', getVar('steps'))),
-                    sendMessageWait('tick'),
-                ]),
-                setVar('done', num(1)),
-            ]],
-        },
-
+function commonObjects(title, startX, endX, script, color) {
+    return [
+        label(title),
+        sprite('ball', '공', ballSvg(color), {
+            x: startX,
+            y: 0,
+            width: 64,
+            height: 64,
+        }, [script]),
         // Entry는 배열 앞쪽 오브젝트를 위에 그리므로 배경은 마지막에 둡니다.
-        sprite('board', '비교 트랙', boardSvg, {
+        sprite('track', '이동 길', trackSvg(startX, endX), {
             x: 0,
             y: 0,
             width: 640,
             height: 360,
         }),
-    ],
-    interface: {
-        canvasWidth: 640,
-        menuWidth: 280,
-        object: 'controller',
-    },
-};
+    ];
+}
+
+function baseProject({ name, title, startX, endX, variables, script, functions = [], color }) {
+    return {
+        name,
+        variables,
+        functions,
+        objects: commonObjects(title, startX, endX, script, color),
+        interface: { canvasWidth: 640, menuWidth: 300, object: 'ball' },
+        speed: 60,
+    };
+}
+
+export function createStep1Project() {
+    return baseProject({
+        name: '이징 수업 1단계 - t로 0부터 100까지',
+        title: '1단계  t × 100',
+        startX: 0,
+        endX: 100,
+        variables: [{ id: 't', name: 't', value: 0, visible: true, x: 500, y: 15 }],
+        script: [
+            whenRun(),
+            repeat(num(100), [
+                changeVar('t', num(0.01)),
+                locateX(calc(getVar('t'), '*', num(100))),
+            ]),
+        ],
+        color: '#22B6FF',
+    });
+}
+
+export function createStep2Project() {
+    return baseProject({
+        name: '이징 수업 2단계 - 좌표 범위 바꾸기',
+        title: '2단계  t × 200 + (-100)',
+        startX: START_X,
+        endX: END_X,
+        variables: [{ id: 't', name: 't', value: 0, visible: true, x: 500, y: 15 }],
+        script: [
+            whenRun(),
+            repeat(num(100), [
+                changeVar('t', num(0.01)),
+                locateX(calc(calc(getVar('t'), '*', num(200)), '+', num(-100))),
+            ]),
+        ],
+        color: '#FFD166',
+    });
+}
+
+function easingExpression(kind) {
+    const t = getVar('t');
+    if (kind === 'easeIn') return calc(t, '*', t);
+    if (kind === 'easeOut') {
+        const remaining = calc(num(1), '-', t);
+        return calc(num(1), '-', calc(remaining, '*', remaining));
+    }
+    return t;
+}
+
+function easingBlocks(kind) {
+    if (kind !== 'easeInOut') return [setVar('p', easingExpression(kind))];
+    const remaining = () => calc(num(1), '-', getVar('t'));
+    return [
+        ifElse(
+            compare(getVar('t'), '<', num(0.5)),
+            [setVar('p', calc(num(2), '*', calc(getVar('t'), '*', getVar('t'))))],
+            [setVar('p', calc(num(1), '-', calc(num(2), '*', calc(remaining(), '*', remaining()))))],
+        ),
+    ];
+}
+
+export function createEasingProject(kind = 'linear') {
+    const labels = {
+        linear: { name: '일정하게', formula: 'p = t', color: '#22B6FF' },
+        easeIn: { name: '천천히 출발', formula: 'p = t × t', color: '#F72585' },
+        easeOut: { name: '천천히 도착', formula: 'p = 1 - (1-t) × (1-t)', color: '#FFD166' },
+        easeInOut: { name: '양쪽 천천히', formula: '전반과 후반 조건문', color: '#72EFDD' },
+    };
+    const current = labels[kind] || labels.linear;
+    return baseProject({
+        name: `이징 수업 - ${current.name}`,
+        title: `${current.name}  ${current.formula}`,
+        startX: START_X,
+        endX: END_X,
+        variables: [
+            { id: 't', name: 't', value: 0, visible: true, x: 500, y: 15 },
+            { id: 'p', name: 'p', value: 0, visible: true, x: 500, y: 52 },
+        ],
+        functions: [moveFunction()],
+        script: [
+            whenRun(),
+            repeat(num(100), [
+                changeVar('t', num(0.01)),
+                ...easingBlocks(kind),
+                callFunction('move', num(START_X), num(END_X)),
+            ]),
+        ],
+        color: current.color,
+    });
+}
+
+export const lessonProjects = [
+    { file: 'ease-step1_001.ent', kind: 'step1', spec: createStep1Project() },
+    { file: 'ease-step2_001.ent', kind: 'step2', spec: createStep2Project() },
+    { file: 'ease-linear_001.ent', kind: 'linear', spec: createEasingProject('linear') },
+    { file: 'ease-in_001.ent', kind: 'easeIn', spec: createEasingProject('easeIn') },
+    { file: 'ease-out_001.ent', kind: 'easeOut', spec: createEasingProject('easeOut') },
+    { file: 'ease-in-out_001.ent', kind: 'easeInOut', spec: createEasingProject('easeInOut') },
+];
+
+// make-ent.mjs에서 단일 spec으로 열 때는 수업의 기본형(p=t)을 사용합니다.
+export default createEasingProject('linear');
