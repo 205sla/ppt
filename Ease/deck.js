@@ -74,12 +74,15 @@
 
         return {
             root: board,
+            preparePrint: () => { stop?.(); setTime(0.5); },
             reset: () => {
                 stop?.();
                 setTime(Number(board.dataset.initial || 0));
             },
             activate: () => {
-                if (board.dataset.autoplay === 'true') setTimeout(play, 360);
+                if (board.dataset.autoplay === 'true') setTimeout(() => {
+                    if (!document.documentElement.classList.contains('print-view') && board.closest('.slide').classList.contains('is-active')) play();
+                }, 360);
             },
         };
     }
@@ -323,6 +326,20 @@
     document.querySelectorAll('[data-matching]').forEach(initMatching);
     document.querySelectorAll('[data-debug-demo]').forEach(initDebug);
     document.querySelectorAll('[data-timer]').forEach(initTimer);
+
+    window.addEventListener('deck:prepareprint', () => {
+        stopAnimations();
+        raceComponents.forEach((component) => component.preparePrint());
+        curveComponents.forEach((component) => component.reset());
+        document.querySelectorAll('[data-normalizer]').forEach((root) => {
+            root.querySelector('.t-gauge').style.setProperty('--fill', '50%');
+            root.querySelector('[data-normalizer-output]').textContent = '0.50';
+        });
+        document.querySelectorAll('[data-position-range]').forEach((range) => {
+            range.value = '0.5';
+            range.dispatchEvent(new Event('input'));
+        });
+    });
 
     window.addEventListener('deck:slidechange', (event) => {
         stopAnimations();

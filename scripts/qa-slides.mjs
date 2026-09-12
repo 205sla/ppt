@@ -4,12 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import { spawn } from 'node:child_process';
+import { chromium } from 'playwright';
 
 const here = path.dirname(url.fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const outputDir = path.join(root, 'test-results', 'slides');
-const myEntryRoot = process.env.MYENTRY_ROOT || 'C:/Users/young/prg/ENTRY/apps/MYentry-game';
-const { chromium } = await import(url.pathToFileURL(path.join(myEntryRoot, 'node_modules/@playwright/test/index.mjs')));
 const port = 4174;
 const baseUrl = `http://127.0.0.1:${port}`;
 
@@ -41,10 +40,30 @@ page.on('console', (message) => {
 
 try {
     await waitForServer();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(baseUrl, { waitUntil: 'networkidle' });
+    await page.locator('[data-deck-search]').waitFor({ state: 'visible' });
+    await page.screenshot({ path: path.join(root, 'test-results', 'home.png'), fullPage: true });
+    await page.locator('[data-deck-search]').fill('찾을 수 없는 자료');
+    if (!await page.locator('[data-empty-state]').isVisible()) throw new Error('자료 검색의 빈 결과 안내가 보이지 않습니다.');
+    await page.locator('[data-deck-search]').fill('이징');
+    if (await page.locator('.material').count() !== 1) throw new Error('자료 제목 검색이 동작하지 않습니다.');
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('.pdf-link').click();
+    const download = await downloadPromise;
+    if (await download.failure()) throw new Error('메인 화면의 PDF 다운로드 실패');
+    await page.locator('[data-deck-search]').fill('');
+    for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error(`메인 화면 ${width}px 가로 넘침`);
+        if (width === 390) await page.screenshot({ path: path.join(root, 'test-results', 'home-mobile.png'), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(`${baseUrl}/Ease/`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => window.ppt205Deck?.slides?.length === 22);
     await page.waitForFunction(() => [...document.images].every((image) => image.complete && image.naturalWidth > 0));
     const slideCount = await page.evaluate(() => window.ppt205Deck.slides.length);
+    if (!await page.locator('.deck-download').isVisible()) throw new Error('슬라이드의 PDF 다운로드 버튼이 보이지 않습니다.');
 
     const entryFiles = [
         'ease-step1_001.ent',
@@ -64,7 +83,7 @@ try {
     const layoutProblems = [];
     for (let index = 0; index < slideCount; index += 1) {
         await page.evaluate((target) => window.ppt205Deck.go(target), index);
-        await page.waitForTimeout(90);
+        await page.waitForTimeout(300);
         const problems = await page.evaluate(() => {
             const slide = document.querySelector('.slide.is-active');
             const slideRect = slide.getBoundingClientRect();
@@ -126,7 +145,7 @@ try {
         if (layoutProblems.length) console.error('레이아웃 문제:', JSON.stringify(layoutProblems, null, 2));
         process.exitCode = 1;
     } else {
-        console.log(`슬라이드 QA 통과: ${slideCount}장, 이미지, 키보드, 노트, 경주, 퀴즈, 단계별 .ent 다운로드`);
+        console.log(`QA 통과: 자료실 PC/모바일, 검색, PDF 다운로드, 슬라이드 ${slideCount}장, 키보드, 노트, 경주, 퀴즈, .ent 다운로드`);
         console.log(`콘택트 시트: ${path.join(root, 'test-results', 'contact-sheet.png')}`);
     }
 } finally {

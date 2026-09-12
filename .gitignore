@@ -1,5 +1,7 @@
 node_modules/
 test-results/
+_site/
+tmp/
 .DS_Store
 Thumbs.db
 *.log

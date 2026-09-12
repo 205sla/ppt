@@ -13,7 +13,7 @@
     --yellow: #ffd166;
     --mint: #72efdd;
     --radius: 1.2cqw;
-    font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    font-family: "Pretendard", "Noto Sans KR", "Noto Sans CJK KR", "Malgun Gothic", system-ui, sans-serif;
 }
 
 * {
@@ -352,6 +352,25 @@ button.button {
     font-variant-numeric: tabular-nums;
 }
 
+.deck-download {
+    position: fixed;
+    z-index: 22;
+    top: 14px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px;
+    border: 1px solid #52617b;
+    border-radius: 7px;
+    color: #eef3ff;
+    background: #101a2f;
+    font: 600 12px/1.4 "Malgun Gothic", system-ui, sans-serif;
+    text-decoration: none;
+}
+.deck-download:hover, .deck-download:focus-visible { border-color: var(--entry); color: var(--entry); }
+:fullscreen .deck-download { display: none; }
+
 .deck-progress-track {
     position: fixed;
     z-index: 21;
@@ -425,44 +444,14 @@ button.button {
     }
 }
 
+.print-view, .print-view body { width: 16in; height: auto; overflow: visible; background: #070b16; }
+.print-view .deck-shell { position: static; display: block; }
+.print-view .deck-stage { width: 16in; height: auto; aspect-ratio: auto; overflow: visible; container-type: normal; box-shadow: none; }
+.print-page { position: relative; width: 16in; height: 9in; container-type: size; break-inside: avoid; break-after: page; }
+.print-page:last-child { break-after: auto; }
+.print-view .slide { display: flex !important; flex-direction: column; position: absolute; inset: 0; animation: none !important; }
+.print-view *, .print-view *::before, .print-view *::after { animation: none !important; transition: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.print-view .deck-controls, .print-view .deck-progress-track, .print-view .notes-panel, .print-view .deck-download { display: none !important; }
 @media print {
-    @page {
-        size: 16in 9in;
-        margin: 0;
-    }
-
-    html,
-    body {
-        height: auto;
-        overflow: visible;
-        background: #fff;
-    }
-
-    .deck-shell {
-        position: static;
-        display: block;
-    }
-
-    .deck-stage {
-        width: 16in;
-        height: auto;
-        overflow: visible;
-        box-shadow: none;
-    }
-
-    .slide,
-    .slide.is-active {
-        position: relative;
-        display: flex !important;
-        width: 16in;
-        height: 9in;
-        break-after: page;
-        animation: none;
-    }
-
-    .deck-controls,
-    .deck-progress-track,
-    .notes-panel {
-        display: none !important;
-    }
+    @page { size: 16in 9in; margin: 0; }
 }

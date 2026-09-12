@@ -23,8 +23,7 @@
             this.bind();
 
             if (this.isPrint) {
-                document.documentElement.classList.add('print-view');
-                this.slides.forEach((slide) => slide.classList.add('is-active'));
+                this.preparePrint();
                 return;
             }
 
@@ -50,6 +49,13 @@
         }
 
         bind() {
+            window.addEventListener('beforeprint', () => this.preparePrint());
+            window.addEventListener('afterprint', () => {
+                if (this.isPrint) return;
+                document.documentElement.classList.remove('print-view');
+                this.root.querySelectorAll('.print-page').forEach((page) => page.replaceWith(...page.childNodes));
+                this.go(this.current, { updateHash: false });
+            });
             this.controls.previous?.addEventListener('click', () => this.previous());
             this.controls.next?.addEventListener('click', () => this.next());
 
@@ -77,7 +83,24 @@
             return match ? clamp(Number(match[1]) - 1, 0, this.slides.length - 1) : 0;
         }
 
+        preparePrint() {
+            document.documentElement.classList.add('print-view');
+            this.slides.forEach((slide) => {
+                if (!slide.parentElement.classList.contains('print-page')) {
+                    const page = document.createElement('div');
+                    page.className = 'print-page';
+                    slide.before(page);
+                    page.append(slide);
+                }
+                slide.classList.add('is-active');
+                slide.setAttribute('aria-hidden', 'false');
+                if ('inert' in slide) slide.inert = false;
+            });
+            window.dispatchEvent(new CustomEvent('deck:prepareprint'));
+        }
+
         onKeyDown(event) {
+            if (this.isPrint) return;
             const target = event.target;
             const isEditing = target instanceof HTMLElement
                 && (target.matches('input, textarea, select, button, a, [contenteditable="true"]'));
@@ -104,6 +127,7 @@
         }
 
         go(index, { updateHash = true } = {}) {
+            if (this.isPrint) return;
             index = clamp(index, 0, this.slides.length - 1);
             const previousSlide = this.slides[this.current];
             const nextSlide = this.slides[index];

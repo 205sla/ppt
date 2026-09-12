@@ -5,7 +5,7 @@ import path from 'node:path';
 import url from 'node:url';
 
 const root = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
-const ignored = new Set(['.git', 'node_modules', 'test-results']);
+const ignored = new Set(['.git', 'node_modules', 'test-results', '_site', 'tmp']);
 const failures = [];
 let checkedLinks = 0;
 
@@ -32,6 +32,21 @@ function checkReference(file, rawReference) {
 }
 
 const files = walk(root);
+const decks = JSON.parse(fs.readFileSync(path.join(root, 'decks.json'), 'utf8'));
+const slugs = new Set();
+for (const deck of decks) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(deck.slug) || slugs.has(deck.slug)) {
+        failures.push(`decks.json → 폴더명 오류 또는 중복: ${deck.slug}`);
+        continue;
+    }
+    slugs.add(deck.slug);
+    if (!deck.title) failures.push(`decks.json → ${deck.slug} 제목 없음`);
+    checkReference(path.join(root, 'index.html'), `${deck.slug}/`);
+    const pdfPath = path.join(root, deck.slug, 'downloads', `${deck.slug}.pdf`);
+    if (!fs.existsSync(pdfPath) || fs.readFileSync(pdfPath).subarray(0, 5).toString() !== '%PDF-') {
+        failures.push(`${deck.slug} → PDF 없음 또는 형식 오류. npm run pdf를 먼저 실행하세요.`);
+    }
+}
 for (const file of files.filter((candidate) => candidate.endsWith('.html'))) {
     const content = fs.readFileSync(file, 'utf8');
     for (const match of content.matchAll(/\b(?:src|href)=["']([^"']+)["']/gi)) checkReference(file, match[1]);

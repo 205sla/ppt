@@ -7,8 +7,14 @@
     "serve": "node scripts/serve.mjs",
     "validate": "node scripts/validate-site.mjs && node --check shared/deck.js && node --check shared/catalog.js && node --check Ease/deck.js",
     "qa": "node scripts/qa-slides.mjs",
+    "pdf": "node scripts/export-pdfs.mjs",
+    "build": "npm run pdf && npm run validate && node scripts/build-site.mjs",
     "entry:build": "node Ease/source/entry/build-ease-files.mjs",
     "entry:verify": "node Ease/source/entry/verify-ease-lab.mjs",
     "entry:blocks": "node Ease/source/entry/export-block-images.mjs"
+  },
+  "devDependencies": {
+    "pdf-lib": "1.17.1",
+    "playwright": "1.59.1"
   }
 }
