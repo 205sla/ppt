@@ -5,7 +5,8 @@
 - 관리 폴더: `C:\Users\young\prg\ai\1. 동적 슬라이드`
 - 사이트: [ppt.205.kr](http://ppt.205.kr/)
 - GitHub: [205sla/ppt](https://github.com/205sla/ppt)
-- 현재 자료: [이징 함수로 움직임 만들기](http://ppt.205.kr/Ease/) (중학교 1학년, 22장)
+- 현재 자료: [인간–AI 협력 퍼즐의 동작 구조](http://ppt.205.kr/CoopAI/) (게임콘텐츠캡스톤디자인, 15장)
+- 로컬 보관: `_archive/` (Git 추적·사이트 배포 제외)
 
 ## 새 슬라이드 만들기
 
@@ -69,14 +70,12 @@ npm run serve
 - [작업 규칙](AGENTS.md): 이후 작업에서도 유지할 공통 원칙
 - [도메인 연결](DOMAIN_SETUP.md): GitHub Pages와 GoDaddy 설정
 
-## 엔트리 수업 전용 도구
+## 사용하지 않는 슬라이드 보관
 
-공통 슬라이드 도구와 분리해 `Ease/source/`에서 관리합니다.
+자료 전체를 `_archive/<기존 폴더명>/`에 옮기고 `decks.json`에서 등록을 제거합니다. `.gitignore`의 `/_archive/` 규칙으로 새 커밋에서 제외하며, 이미 추적하던 원래 경로의 삭제도 커밋해야 배포본에서 내려갑니다. 다음 배포부터 목록·웹 슬라이드·PDF의 기존 주소가 모두 제외됩니다.
 
-```powershell
-npm run entry:build
-npm run entry:verify
-npm run entry:blocks
-```
+이징 함수 자료는 `_archive/Ease/`에 원본·이미지·PDF·엔트리 실습 파일·전용 도구를 보관했습니다. 원래 등록 정보, npm 명령, 파일 해시는 `_archive/Ease.archive.json`에 있습니다. 공통 `package.json`의 엔트리 전용 명령은 제거했습니다.
 
-MYentry-game 경로는 `MYENTRY_ROOT`로 지정할 수 있습니다. 실행 검증과 블록 이미지 추출에는 MYentry 로컬 서버가 필요합니다. 기존 번호의 `.ent`를 다시 만드는 작업에는 원래의 `--force` 규칙을 유지합니다.
+다시 사용할 때는 폴더를 원래 루트 위치로 복원하고 보관한 등록 정보를 `decks.json`에 `draft` 상태로 추가합니다. 검수 후 명시적으로 공개합니다. 자세한 절차는 [구조와 운영](docs/MAINTENANCE.md#로컬-보관과-복원)을 참고하세요.
+
+`_archive/`는 이 컴퓨터에만 보관되며 Git clone으로 복원되지 않습니다. 이전에 공개했던 버전은 기존 Git 이력에 남습니다.

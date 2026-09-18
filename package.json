@@ -14,10 +14,7 @@
     "qa": "node scripts/qa-slides.mjs",
     "pdf": "node scripts/export-pdfs.mjs",
     "build": "npm run validate && npm run pdf && node scripts/build-site.mjs",
-    "preview": "node scripts/serve.mjs --dist",
-    "entry:build": "node Ease/source/entry/build-ease-files.mjs",
-    "entry:verify": "node Ease/source/entry/verify-ease-lab.mjs",
-    "entry:blocks": "node Ease/source/entry/export-block-images.mjs"
+    "preview": "node scripts/serve.mjs --dist"
   },
   "devDependencies": {
     "pdf-lib": "1.17.1",

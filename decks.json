@@ -1,14 +1,5 @@
 [
   {
-    "slug": "Ease",
-    "title": "이징 함수로 움직임 만들기",
-    "status": "published",
-    "category": "수업",
-    "date": "2026-09-12",
-    "description": "t 하나로 시작해 일정한 움직임과 세 가지 이징을 만들어 보는 엔트리 수업",
-    "meta": "중학교 1학년 · 약 90분 · 슬라이드 22장"
-  },
-  {
     "slug": "CoopAI",
     "title": "인간–AI 협력 퍼즐의 동작 구조",
     "status": "published",
