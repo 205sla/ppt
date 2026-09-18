@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="음성, 게임 JSON, 계층적 판단, 실제 행동과 결과 회신을 단계별로 보는 인간–AI 협력 퍼즐 설계">
+  <title>인간–AI 협력 퍼즐의 동작 구조</title>
+  <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../shared/deck.css">
+  <link rel="stylesheet" href="../shared/themes/light.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="../shared/deck.js" defer></script>
+  <script src="deck.js" defer></script>
+</head>
+<body>
+  <a class="deck-download" href="downloads/CoopAI.pdf" download>PDF 다운로드 ↓</a>
+  <main class="deck-shell">
+    <div class="deck-stage" data-deck data-deck-title="인간–AI 협력 퍼즐" data-deck-footer="더미 · 게임콘텐츠캡스톤디자인 · 동작 설계 / 모의 재생">
+
+      <section class="slide title-slide is-active" data-title="말을 듣고 함께 행동하는 AI">
+        <p class="eyebrow">게임콘텐츠캡스톤디자인 · 더미 · 2026.09.18</p>
+        <div class="hero">
+          <p class="hero-overline">인간–AI 협력 퍼즐</p>
+          <h1>말을 듣고<br>함께 행동하는 AI</h1>
+          <p class="lead">음성, 게임 정보, 판단, 행동은<br>어떤 경로로 오가는가</p>
+          <div class="hero-flow" aria-label="음성 지시에서 실제 행동까지"><span>음성 지시</span><b>→</b><span>상태 JSON</span><b>→</b><span>판단</span><b>→</b><span>실제 행동</span></div>
+          <p class="cover-note">계층형 AI 에이전트 구조 기반 실시간 인간-AI 협동 게임 시스템 개발 및 성능 분석</p>
+        </div>
+        <p class="opening-help">← → 슬라이드 이동 · F 전체 화면 · N 발표자 노트<br>각 장의 ‘재생’과 ‘다음 단계’로 정보 흐름을 확인합니다.</p>
+        <aside class="speaker-notes"><p>이 자료는 우리가 구현하려는 구조를 설명하는 모의 재생입니다. 실제 API 호출·마이크 입력·모델 성능 측정은 하지 않습니다. 사용자는 1인칭 3D 게임을 보고, AI는 관찰 가능한 상태와 행동 목록을 받습니다. 실명별 역할과 최종 모델은 아직 확정하지 않았습니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="전체 정보 흐름" data-demo="flow">
+        <p class="eyebrow">01 · 전체 구조</p><h2>음성과 게임 정보가 조정기에서 만난다</h2>
+        <div class="flow-layout">
+          <div class="flow-map" role="img" aria-label="플레이어와 GPT-Live는 음성을 주고받고, 조정기는 게임 상태와 모델 판단을 연결해 언리얼을 제어한다">
+            <svg class="wires" viewBox="0 0 960 460" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z"/></marker></defs><path data-edge="voice" class="two-way" d="M230 97H326"/><path data-edge="request" d="M450 152V212"/><path data-edge="state" d="M259 292H346"/><path data-edge="fast" class="two-way" d="M605 254H680V185H710"/><path data-edge="slow" class="two-way" d="M605 291H680V398H710"/><path data-edge="execute" d="M420 336V400H160V350"/><path data-edge="return" d="M525 212V152"/></svg>
+            <div class="flow-node voice-node" data-node="human"><small>사람</small><strong>플레이어</strong><span>마이크 · 스피커</span></div>
+            <div class="flow-node live-node" data-node="live"><small>음성 창구</small><strong>GPT-Live</strong><span>듣기 · 말하기</span></div>
+            <div class="flow-node engine-node" data-node="engine"><small>게임</small><strong>언리얼</strong><span>관찰 · 이동 · 장치</span></div>
+            <div class="flow-node coord-node" data-node="coord"><small>우리가 구현</small><strong>조정기 + 기억</strong><span>상태 · 작업 · 검증</span></div>
+            <div class="flow-node fast-node" data-node="fast"><small>현재 행동</small><strong>빠른 판단</strong><span>행동 하나 선택</span></div>
+            <div class="flow-node slow-node" data-node="slow"><small>복잡한 문제</small><strong>느린 계획</strong><span>순서 · 조건 · 질문</span></div>
+            <span class="wire-label w-voice">WebRTC 음성</span><span class="wire-label w-state">게임 JSON</span><span class="wire-label w-run">검증된 행동 / 실행 결과</span>
+          </div>
+          <div class="message-view"><p class="small-label" data-message-route></p><pre data-message></pre><p class="small muted">메시지는 동작 설명을 위한 예시입니다.</p></div>
+        </div>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>음성은 브라우저와 GPT-Live의 미디어 트랙을 이용합니다. 게임 JSON 전체는 언리얼에서 우리 Node 서버로, 필요한 상태는 판단 모델로 갑니다. GPT-Live로 보내는 게임 문맥은 별도 텍스트 요약입니다. 느린 계획은 필요할 때만 호출합니다. 출처: <a href="https://developers.openai.com/api/docs/guides/voice-webrtc?api=live">OpenAI WebRTC</a>, <a href="https://developers.openai.com/api/docs/guides/live-delegation">client delegation</a>. 언리얼 WebSocket 프로토콜과 내부 작업 구조는 팀의 설계입니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="GPT-Live 실제 연결 순서" data-demo="connect">
+        <p class="eyebrow">02 · 공식 API</p><h2>GPT-Live의 입력은 두 통로로 나뉜다</h2>
+        <div class="transport-row"><div><span class="line-key voice"></span><strong>음성</strong><p>마이크 ↔ WebRTC 오디오 트랙 ↔ GPT-Live</p></div><div><span class="line-key data"></span><strong>이벤트·문맥</strong><p>Node 서버 ↔ sideband WebSocket ↔ 같은 세션</p></div></div>
+        <div class="split api-split">
+          <ol class="numbered-steps" data-connect-steps><li>마이크 허용 · 오디오 트랙 추가</li><li>데이터 채널 생성 · SDP offer</li><li>서버가 Live 세션 생성</li><li>SDP answer 적용 · 시작 이벤트 확인</li><li>서버가 같은 세션에 sideband 연결</li></ol>
+          <div><p class="small-label" data-connect-label></p><pre class="code-block" data-connect-code></pre></div>
+        </div>
+        <p class="footnote">API 키는 서버에서 사용 · WebRTC 세션 생성 뒤 session.start를 다시 보내지 않음</p>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>공식 문서와 기존 LiveDemo 코드를 2026-09-18 대조했습니다. POST /v1/live/sessions의 JSON은 session과 transport를 포함합니다. 결과의 session.id와 transport.sdp를 사용합니다. 오디오 데이터는 oai-events 데이터 채널에 JSON으로 실어 보내지 않습니다. sideband는 서버가 전사와 제어 이벤트를 처리하는 추가 연결입니다. 구현에서는 초기 대화를 놓치지 않도록 SDP answer를 브라우저에 반환하기 전에 sideband를 연결할 수 있습니다. 발표 순서는 각 연결의 역할을 보여줍니다. <a href="https://developers.openai.com/api/docs/guides/voice-webrtc?api=live">공식 WebRTC 순서</a> · <a href="https://developers.openai.com/api/docs/guides/voice-server-controls?api=live">sideband</a></p></aside>
+      </section>
+
+      <section class="slide" data-title="게임 JSON과 음성 문맥" data-demo="context">
+        <p class="eyebrow">03 · 입력과 결과의 구분</p><h2>게임 JSON과 Live 문맥은 전달 형식이 다르다</h2>
+        <div class="context-selector" role="group" aria-label="입력 종류"><button class="button" data-context="state">① 판단용 JSON</button><button class="button" data-context="delegation">② 작업 위임</button><button class="button" data-context="quiet">③ 조용한 상태 전달</button><button class="button" data-context="speak">④ 결과를 말하기</button></div>
+        <div class="split context-body"><div><p class="route-large" data-context-route></p><h3 data-context-title></h3><p class="lead" data-context-explain></p><p class="context-limit" data-context-limit></p></div><pre class="code-block" data-context-code></pre></div>
+        <p class="footnote">전사 delta에는 확정된 발화 종료 이벤트가 없음 · 전사 조각만으로 행동 실행을 확정하지 않음</p>
+        <aside class="speaker-notes"><p>client delegation의 session.delegation.created는 ID·target·offset 같은 메타데이터입니다. 사용자 지시문을 포함하지 않으므로 우리 앱이 전사와 작업 상태를 결합합니다. session.input은 세션 시작 시 과거 텍스트 대화를 주는 필드입니다. 실행 중 문맥은 append 이벤트로 보냅니다. thinking/commentary/instructions append의 content는 최대 500토큰의 문자열이며 delegation_id가 필수입니다. 작업 결과는 실제 받은 위임 ID를 유지하고 일반 문맥은 null을 씁니다. appends ACK는 음성 재생·행동 성공을 증명하지 않습니다. instructions.append는 앱 지침용이며 게임 관찰을 지침으로 승격하지 않습니다. <a href="https://developers.openai.com/api/docs/guides/live-conversations">Live 문맥·전사</a> · <a href="https://developers.openai.com/api/docs/guides/live-delegation">공식 위임·결과 이벤트</a></p></aside>
+      </section>
+
+      <section class="slide" data-title="AI에게 보이는 정보" data-demo="observe">
+        <p class="eyebrow">04 · 게임 상태 추상화</p><h2>AI가 아는 정보만 골라 전달한다</h2>
+        <div class="split observation-split"><div><div class="mini-toolbar"><button class="button" data-observation="known">AI 관찰 보기</button><button class="button" data-observation="world">전체 상태 보기</button></div><div class="grid-scene" data-scene="observe" aria-label="발판과 문, AI가 모르는 반대편 공간의 격자 모식도"></div><p class="map-caption">3D 공간의 격자 표현 · 전체 상태는 디버깅·채점용</p></div><div><p class="small-label" data-observation-label></p><pre class="code-block" data-observation-json></pre><p class="small">플레이어의 설명은 <strong>출처와 확인 여부</strong>를 함께 저장한다.</p></div></div>
+        <p class="takeaway" data-observation-caption>보이지 않는 레버의 존재와 정답을 자동으로 알려주지 않는다.</p>
+        <aside class="speaker-notes"><p>전체 상태 보기로 바꿔도 오른쪽 AI 입력은 제한된 관찰을 유지합니다. 전역 상태는 채점에만 쓰고 AI 판단으로 새지 않아야 합니다. 알려진 공간은 기억에 저장하고 바뀐 관련 정보 위주로 전송합니다. 후보 행동 목록에서도 비공개 객체가 드러나지 않게 합니다. 발판과 문 사이의 관계를 사람이 말해줬다면 미확인 발언으로 저장합니다. 이 지도는 설명용 모식도이며 실제 언리얼 화면이 아닙니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="빠른 행동 선택" data-demo="decision">
+        <p class="eyebrow">05 · 현재 행동 판단</p><h2>가능한 행동 중 하나를 고르거나 질문한다</h2>
+        <div class="mini-toolbar"><button class="button" data-request="clear">명확한 지시</button><button class="button" data-request="ambiguous">모호한 지시</button></div>
+        <p class="quoted-request" data-request-text></p>
+        <div class="decision-flow"><div class="action-list" aria-label="가능한 행동"><div data-action="hold_blue">파란 발판 유지 <code>hold_blue</code></div><div data-action="hold_yellow">노란 발판 유지 <code>hold_yellow</code></div><div data-action="ask_player">플레이어에게 질문 <code>ask_player</code></div><div data-action="wait">현재 위치에서 대기 <code>wait</code></div></div><div class="decision-arrow">→</div><div class="model-core"><strong>빠른 판단</strong><span>지시 + 관찰 + 현재 계획</span></div><div class="decision-arrow">→</div><pre class="code-block" data-decision-output></pre></div>
+        <p class="takeaway">프로그램은 가능한 행동을 정의하고, 모델은 상황에 맞는 선택을 한다.</p>
+        <aside class="speaker-notes"><p>Gemma 12B는 실험 후보이고 실제 지연·출력 안정성은 아직 미측정입니다. JSON Schema로 형식과 enum을 제한하되 문법 성공과 올바른 선택은 따로 평가합니다. action_id를 엔진 함수에 매핑하며 모델이 임의의 코드를 실행하지 않습니다. 모호한 지시에서는 두 발판 중 임의로 정하지 않고 질문합니다. <a href="https://lmstudio.ai/docs/developer/openai-compat/structured-output">LM Studio Structured Output</a></p></aside>
+      </section>
+
+      <section class="slide" data-title="선택에서 실제 행동까지" data-demo="execute">
+        <p class="eyebrow">06 · 언리얼 행동 실행기</p><h2>한 번 받은 행동을 여러 프레임에 걸쳐 수행한다</h2>
+        <div class="split execution-split"><div><div class="grid-scene" data-scene="execute" aria-label="AI가 발판으로 이동하고 문을 유지하는 실행 모식도"></div><p class="map-caption">이동과 접촉 판정은 엔진이 수행</p></div><div><div class="state-chain"><span data-status="Accepted">Accepted</span><b>→</b><span data-status="Moving">Moving</span><b>→</b><span data-status="Holding">Holding</span></div><p class="small-label" data-execution-label></p><pre class="code-block" data-execution-output></pre><div class="speech-line" data-execution-speech></div></div></div>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>조정기는 작업 버전·행동 ID·전제조건을 검사한 뒤 실행기를 호출합니다. 작업 ID는 서버가 부여하며 중복 실행을 막습니다. Accepted는 접수이고 Holding은 유지 중이므로 아직 작업 완료가 아닙니다. AI가 직접 못 보는 통과 여부는 플레이어 확인을 기다립니다. 마지막 음성은 실제 접촉 결과를 받은 후에만 전달합니다. LLM 호출 없이도 엔진의 이동·유지는 계속됩니다. 이동 실패와 취소는 별도 상태로 관리합니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="복잡한 협력 계획" data-demo="plan">
+        <p class="eyebrow">07 · 느린 계획</p><h2>여러 행동의 순서와 실행 조건을 정한다</h2>
+        <p class="quoted-request">“반대편에 문을 고정하는 레버가 보여.”</p>
+        <div class="plan-track"><div data-plan-step="0"><span class="owner ai">AI</span><h3>발판 유지</h3><p>사람이 지나갈 동안<br>현재 작업 지속</p></div><div data-plan-step="1"><span class="owner human">사람</span><h3>레버 확인</h3><p>관찰한 기능을<br>AI에게 설명</p></div><div data-plan-step="2"><span class="owner human">사람</span><h3>문 고정</h3><p>가능하다면 조작하고<br>결과 공유</p></div><div data-plan-step="3"><span class="owner ai">AI</span><h3>문 통과</h3><p>고정이 확인되면<br>발판에서 이동</p></div></div>
+        <div class="plan-condition"><strong data-plan-condition></strong><p>확인되지 않은 장치·효과는 질문이나 조건으로 남긴다.</p></div>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>레버는 사람이 알려준 경우에만 계획에 등장합니다. 상위 모델은 전체 순서와 필요한 정보를 정하고, 실제 행동은 현재 조건을 확인해 한 단계씩 실행합니다. 사람의 행동은 제안이며 프로그램이 플레이어를 조종하지 않습니다. 새로운 계획이 왔다고 발판에서 즉시 내려오지 않습니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="계획과 행동의 병렬 처리" data-demo="parallel">
+        <p class="eyebrow">08 · 계층적·병렬 구조</p><h2>새 계획을 기다리는 동안 유효한 행동을 이어간다</h2>
+        <div class="timeline-setting"><label for="plan-duration">계획 처리 길이 <output id="duration-output">6</output> 단계</label><input id="plan-duration" type="range" min="3" max="8" value="6"><span>설명용 가상 시간 · 실측 결과 아님</span></div>
+        <div class="timeline" data-timeline><div class="time-ruler"><span>0</span><span>3</span><span>6</span><span>9</span><span>12 단계</span></div><div class="timeline-group"><strong>계획을 기다림</strong><div class="lane"><span>계획</span><div class="lane-track"><i class="bar plan-bar" data-bar="serial-plan">계획</i></div></div><div class="lane"><span>판단·행동</span><div class="lane-track"><i class="bar fast-bar" data-bar="serial-fast">선택</i><i class="bar run-bar" data-bar="serial-run">이동·유지</i></div></div></div><div class="timeline-group"><strong>계획과 함께 진행</strong><div class="lane"><span>계획</span><div class="lane-track"><i class="bar plan-bar" data-bar="parallel-plan">계획</i></div></div><div class="lane"><span>판단·행동</span><div class="lane-track"><i class="bar fast-bar" data-bar="parallel-fast">선택</i><i class="bar run-bar" data-bar="parallel-run">이동·유지</i></div></div></div><div class="time-cursor" data-time-cursor><span data-time-label></span></div></div>
+        <p class="footnote">전제: 현재 지시만으로 실행할 유효한 행동이 있음 · 같은 GPU의 모델 동시 추론은 별도 검증</p>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>축은 설명용 가상 단계이며 지연 측정값이 아닙니다. 막대 길이를 바꿔 계획의 지연과 행동 시작의 관계를 보여줍니다. 즉시 실행할 행동이 모호하거나 위험하면 질문·대기를 선택해야 합니다. 비동기 프로그램이 실제 모델 서버의 동시 추론을 보장하지는 않습니다. 실제 연구는 같은 퍼즐·관찰·실행기를 고정하고 모델과 구조의 효과를 분리합니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="늦게 도착한 응답 처리" data-demo="cancel">
+        <p class="eyebrow">09 · 지시 변경</p><h2>오래된 응답이 새 지시를 덮어쓰지 않게 한다</h2>
+        <div class="cancel-layout"><div class="command-stream"><div data-command="old"><span>작업 7</span><p>“파란 발판을 밟아.”</p><small>모델 응답 대기</small></div><div data-command="new"><span>작업 8</span><p>“노란 발판으로 바꿔.”</p><small>현재 목표 갱신</small></div></div><div class="epoch-gate"><small>조정기</small><strong>현재 작업 <b data-current-epoch>7</b></strong><div class="arriving-response" data-arriving-response></div><p class="gate-verdict" data-gate-verdict></p></div><div class="action-receipt"><small>언리얼 실행</small><strong data-cancel-action></strong><p data-cancel-detail></p></div></div>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>task_epoch는 설명용 내부 필드이며 OpenAI 이벤트가 아닙니다. 모델 요청 취소가 서버 추론을 실제로 멈춘다고 가정하지 않고, 늦은 결과를 프로그램에서 폐기합니다. 관찰 버전만 바뀌었다면 행동 관련 전제조건을 다시 검사합니다. 음성 끼어들기로 말이 끊긴 것과 게임 작업 취소는 다릅니다. 발판 유지 취소도 실제로 내려오는 이동과 구분합니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="동시 스위치 조작" data-demo="sync">
+        <p class="eyebrow">10 · 협력 행동의 시간 제어</p><h2>협의는 모델이, 실행 시각은 엔진이 관리한다</h2>
+        <div class="sync-scene"><div class="switch-station" data-station="ai"><span>AI 스위치</span><div class="switch-drawing"><i></i></div><strong data-sync-ai></strong></div><div class="engine-clock"><small>공통 게임 시계</small><strong data-countdown></strong><p data-sync-event></p></div><div class="switch-station" data-station="human"><span>사람 스위치</span><div class="switch-drawing"><i></i></div><strong data-sync-human></strong></div></div>
+        <p class="takeaway">준비 확인 → 엔진 카운트다운 → AI 예약 실행 + 사람의 실제 입력</p>
+        <div class="demo-bottom"><p class="step-caption" data-caption aria-live="polite"></p><div class="anim-controls" data-controls></div></div>
+        <aside class="speaker-notes"><p>단일 PC 사람+AI 게임을 가정합니다. 모델 응답 도착 시각과 음성 합성 박자에 정밀 동기화를 맡기지 않습니다. 모의 재생의 사람 입력은 예시이며 실제 게임에서 플레이어가 직접 조작합니다. 양측 입력의 실제 시각 차이를 기록해 평가합니다. 준비 조건이 깨지면 예약을 취소합니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="먼저 도움을 제안하는 조건" data-demo="initiative">
+        <p class="eyebrow">11 · 상황에 맞는 제안</p><h2>진행이 막힌 순간에 해결 방법을 제안한다</h2>
+        <div class="mini-toolbar"><button class="button" data-initiative="stuck">실패 반복</button><button class="button" data-initiative="holding">발판 유지 중</button><button class="button" data-initiative="speaking">플레이어 발화 중</button></div>
+        <div class="initiative-body"><div><p class="small-label">엔진·대화에서 확인한 사건</p><div class="event-stack" data-initiative-events></div></div><div class="initiative-gate"><small>제안 조건 검사</small><strong data-initiative-gate></strong><p data-initiative-reason></p></div><div class="proposal-output"><p class="small-label">AI 동료의 반응</p><blockquote data-initiative-speech></blockquote></div></div>
+        <p class="takeaway">정상적인 대기·유지는 막힘으로 세지 않고, 질문과 제안의 중복을 억제한다.</p>
+        <aside class="speaker-notes"><p>기본적으로 지시를 따르다가 진전 없음·반복 실패를 감지하면 계획 검토를 요청한다는 사용자 구상을 반영했습니다. 발화 중, 이미 질문을 보낸 뒤 답을 기다리는 상태, 재제안 제한 간격에서는 말을 겹치지 않습니다. 시간 임계값은 실제 플레이테스트로 정하며 이 슬라이드는 고정된 성능값을 제시하지 않습니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="구현 역할과 평가" data-demo="research">
+        <p class="eyebrow">12 · 자체 구현과 검증</p><h2>세 영역의 구현 결과를 같은 시나리오로 비교한다</h2>
+        <div class="responsibilities"><div><span>①</span><h3>게임·상태 추상화</h3><p>퍼즐과 관찰 필터<br>객체·관계·행동 JSON</p><strong>숨은 정보 누출<br>전달량 · 추출 시간</strong></div><div><span>②</span><h3>대화·모델 판단</h3><p>Live 연결과 기억<br>행동·계획 프롬프트</p><strong>행동 적합률<br>모델 지연 · 사용량</strong></div><div><span>③</span><h3>계층 제어·실행</h3><p>호출·버전·취소 제어<br>행동 실행과 로그</p><strong>협력 성공률<br>행동 지연 · 취소 오류</strong></div></div>
+        <div class="metric-line"><span>지시 입력 확정</span><b>────────────→</b><strong>첫 올바른 행동 시작</strong></div><p class="footnote">음성 응답 시작 시간은 별도 기록 · 단일 판단 / 계층 구조 비교 · 실명별 배정과 성능 수치는 미확정</p>
+        <aside class="speaker-notes"><p>전체 실험은 공동 수행하고 ③이 공통 로그 도구를 만듭니다. 기존 API와 엔진을 연결하는 데서 더 나아가 제한 관찰, 병렬 제어, 유지·취소, 늦은 답 처리와 비교 실험을 구현합니다. 모델까지 바꾸면 구조만의 효과로 해석할 수 없으므로 같은 모델 구성에서의 통제 비교 또는 차이를 명시한 시스템 비교가 필요합니다. 음성 입력의 시간 기준은 앱에서 정의하고 전사 종료 이벤트가 제공된다고 가정하지 않습니다.</p></aside>
+      </section>
+
+      <section class="slide" data-title="참고 연구와 적용 범위">
+        <p class="eyebrow">13 · 연구 근거</p><h2>HLA의 역할 분리를 3D 협력 행동에 적용한다</h2>
+        <div class="split research-split"><figure><img src="assets/hla-framework.png" alt="HLA 논문 Figure 2. Slow Mind, Fast Mind, Executor가 역할을 나누는 원래 프레임워크"><figcaption>HLA 원문 Figure 2 · 그림 속 모델·시간은 원 논문의 구성</figcaption></figure><div><h3>참고하는 구조</h3><p>복잡한 의도 해석<br>빠른 거시 행동 선택<br>엔진의 구체적 행동 실행</p><h3>우리 게임에서 구현</h3><p>음성 입력과 제한된 3D 관찰<br>발판 유지·동시 조작·취소<br>늦은 응답과 새 지시의 충돌 처리</p><div class="source-links"><a href="https://sites.google.com/view/overcooked-hla/" target="_blank" rel="noopener">HLA 프로젝트 ↗</a><a href="https://github.com/HosnLS/Hierarchical-Language-Agent" target="_blank" rel="noopener">공식 코드 ↗</a></div></div></div>
+        <p class="footnote">우리 모델의 속도는 아직 미측정 · 구조 분리 자체를 새로운 알고리즘으로 주장하지 않음</p>
+        <aside class="speaker-notes"><p>논문: LLM-Powered Hierarchical Language Agent for Real-time Human-AI Coordination, arXiv:2312.15224. Figure 2는 이전에 확보한 원문 캡처입니다. 원 그림의 GPT-3.5, Llama2-13B와 약 3초·0.5초 표기는 우리 시스템의 모델·측정 결과가 아닙니다. <a href="https://arxiv.org/abs/2312.15224">원문</a>. API 설계 근거: <a href="https://developers.openai.com/api/docs/guides/voice-webrtc?api=live">GPT-Live WebRTC</a>, <a href="https://developers.openai.com/api/docs/guides/live-conversations">문맥·전사</a>, <a href="https://developers.openai.com/api/docs/guides/live-delegation">위임</a>, <a href="https://lmstudio.ai/docs/developer/openai-compat/structured-output">LM Studio</a>. 2026-09-18 확인.</p></aside>
+      </section>
+
+      <section class="slide" data-title="첫 통합과 최종 검증">
+        <p class="eyebrow">14 · 구현 순서</p><h2>발판 하나에서 전체 연결을 먼저 입증한다</h2>
+        <div class="milestones"><div><span class="milestone-label">현재 기록</span><h3>음성 → 문자 출력</h3><p>Live 세션·엔진 연결 검증 기록<br>상담에서 음성 출력 시연 기록</p></div><div><span class="milestone-label">첫 통합</span><h3>상태 → 판단 → 발판</h3><p>판단 모델 하나로 이동·유지<br>실제 결과를 음성으로 회신</p></div><div><span class="milestone-label">연구 구현</span><h3>계획과 행동의 병렬화</h3><p>유지·취소·재계획 구현<br>단일 구조와 같은 퍼즐로 비교</p></div></div>
+        <p class="closing-question">협력 성공률을 유지하면서<br><span>올바른 행동을 더 빨리 시작할 수 있는가?</span></p>
+        <p class="small muted">이 자료의 애니메이션은 설계 설명용입니다. 협력 퍼즐 완주와 모델 성능은 실제 실행으로 검증합니다.</p>
+        <aside class="speaker-notes"><p>9/17의 TEST_RESULTS는 실제 API 세션 연결과 Node→Unreal 문자 출력 경로를 검증했고 물리 마이크를 포함한 종단 간 시험은 당시 미완료라고 기록했습니다. 9/18 상담에는 음성 출력 시연 기록이 있습니다. 이 발표 자료 작성 중 새로운 API 추론이나 게임 플레이를 실행하지 않았습니다. 최종 모델, 이름별 담당, 제안 임계값은 이후 결정합니다. 자료 공개에는 학생 전화번호·이메일·API 키를 포함하지 않습니다.</p></aside>
+      </section>
+    </div>
+  </main>
+  <nav class="deck-controls" aria-label="슬라이드 이동"><button type="button" data-deck-previous title="이전 슬라이드 (←)">←</button><span class="deck-count" data-deck-count aria-live="polite"></span><button type="button" data-deck-next title="다음 슬라이드 (→)">→</button></nav>
+  <div class="deck-progress-track" aria-hidden="true"><div class="deck-progress" data-deck-progress></div></div>
+  <aside class="notes-panel" data-deck-notes aria-label="발표자 노트"></aside>
+</body>
+</html>
