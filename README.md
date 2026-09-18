@@ -5,7 +5,8 @@
 - 관리 폴더: `C:\Users\young\prg\ai\1. 동적 슬라이드`
 - 사이트: [ppt.205.kr](http://ppt.205.kr/)
 - GitHub: [205sla/ppt](https://github.com/205sla/ppt)
-- 현재 자료: [인간–AI 협력 퍼즐의 동작 구조](http://ppt.205.kr/CoopAI/) (게임콘텐츠캡스톤디자인, 15장)
+- 상세 설명: [인간–AI 협력 퍼즐의 동작 구조](http://ppt.205.kr/CoopAI/) (게임콘텐츠캡스톤디자인, 15장)
+- 한 장 통합: [협력 AI 동작 흐름](http://ppt.205.kr/CoopAIFlow/) (기존 1·2·7페이지 통합, 단계별 재생)
 - 로컬 보관: `_archive/` (Git 추적·사이트 배포 제외)
 
 ## 새 슬라이드 만들기
