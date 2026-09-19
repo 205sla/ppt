@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 export default async function verify({ page }) {
   const output = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../test-results/CoopAIFlow');
   await page.waitForFunction(() => !!window.coopAIFlow);
+  assert.equal(await page.locator('[data-ai-role]').count(), 2);
+  assert.equal(await page.locator('[data-node=planner],[data-node=fast]').count(), 0);
   const set = value => page.evaluate(index => window.coopAIFlow.setStep(index), value);
   const snap = () => page.evaluate(() => window.coopAIFlow.snapshot());
   for (let step = 0; step < 8; step++) {
@@ -15,8 +17,8 @@ export default async function verify({ page }) {
   }
   await set(5); assert.equal((await snap()).state, 'Accepted'); assert.equal((await snap()).cell, 1);
   await set(6); assert.equal((await snap()).state, 'Moving'); assert.equal((await snap()).cell, 2);
-  await page.locator('[data-parallel]').check();
-  assert.equal(await page.locator('[data-node="planner"]').evaluate(el => el.classList.contains('active')), true);
+  await page.locator('[data-reconsider]').check();
+  assert.equal(await page.locator('[data-node="action"]').evaluate(el => el.classList.contains('active')), true);
   await set(7); assert.equal((await snap()).state, 'Moving'); assert.equal((await snap()).cell, 4);
   await set(8); assert.equal((await snap()).state, 'Holding');
   const result = JSON.parse(await page.locator('[data-packet]').innerText());
@@ -26,8 +28,8 @@ export default async function verify({ page }) {
   const reply = JSON.parse(await page.locator('[data-packet]').innerText());
   assert.equal(reply.type, 'session.commentary.append'); assert.equal(reply.delegation_id, 'item_demo');
   assert.match(await page.locator('[data-speech]').innerText(), /밟고 있어/);
-  await page.locator('[data-parallel]').uncheck();
-  assert.equal(await page.locator('[data-node="planner"]').evaluate(el => el.classList.contains('active')), false);
+  await page.locator('[data-reconsider]').uncheck();
+  assert.equal(await page.locator('[data-node="action"]').evaluate(el => el.classList.contains('active')), false);
   await page.locator('[data-reset]').click();
   assert.equal((await snap()).step, 0);
   await page.locator('[data-play]').click();
@@ -44,7 +46,7 @@ export default async function verify({ page }) {
   await page.keyboard.press('Space'); assert.equal((await snap()).playing, false);
   for (const width of [1280,1920]) {
     await page.setViewportSize({width, height:Math.round(width*9/16)});
-    await page.evaluate(() => window.coopAIFlow.setParallel(true));
+    await page.evaluate(() => window.coopAIFlow.setReconsider(true));
     for (let i = 0; i < 10; i++) {
       await set(i);
       const issues = await page.evaluate(() => {
@@ -72,8 +74,8 @@ export default async function verify({ page }) {
   await page.evaluate(() => window.ppt205Deck.preparePrint());
   assert.equal(await page.locator('.overview').innerText(), first, 'Print must be idempotent');
   await page.evaluate(() => dispatchEvent(new Event('afterprint')));
-  assert.equal((await snap()).step, before.step); assert.equal((await snap()).parallel, before.parallel);
+  assert.equal((await snap()).step, before.step); assert.equal((await snap()).reconsider, before.reconsider);
   assert.equal((await snap()).printing, false); assert.equal((await snap()).playing, false);
-  await page.evaluate(() => window.coopAIFlow.setParallel(false)); await set(0);
-  console.log('CoopAIFlow: 지시·판단·실행·접촉·발화 순서, 병렬 계획, 재생·키보드·인쇄 복귀 통과');
+  await page.evaluate(() => window.coopAIFlow.setReconsider(false)); await set(0);
+  console.log('CoopAIFlow: 지시·판단·실행·접촉·발화 순서, 같은 행동 AI 재판단, 재생·키보드·인쇄 복귀 통과');
 }

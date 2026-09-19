@@ -7,6 +7,9 @@ export default async function verify({ page, baseUrl, deck }) {
   }, name);
   await page.waitForFunction(() => !!window.coopAIDeck);
 
+  await visit('flow');
+  assert.equal(await page.locator('[data-demo=flow] [data-ai-role]').count(), 2);
+  assert.equal(await page.locator('[data-node=slow], [data-node=fast]').count(), 0);
   await visit('context');
   await page.click('[data-context="delegation"]');
   assert.match(await page.locator('[data-context-code]').innerText(), /session\.delegation\.created/);
@@ -50,12 +53,14 @@ export default async function verify({ page, baseUrl, deck }) {
   assert.equal(await page.locator('[data-initiative-gate]').innerText(), '제안 보류');
 
   await visit('parallel');
-  await page.locator('#plan-duration').focus();
+  await page.locator('#decision-duration').focus();
   await page.keyboard.press('End');
   assert.equal(await page.locator('#duration-output').innerText(), '8');
-  const serialStart = await page.locator('[data-bar="serial-run"]').evaluate(el => parseFloat(el.style.left));
-  const parallelStart = await page.locator('[data-bar="parallel-run"]').evaluate(el => parseFloat(el.style.left));
-  assert.ok(serialStart > parallelStart);
+  const judgeStart = await page.locator('[data-bar="action-judge"]').evaluate(el => parseFloat(el.style.left));
+  const judgeWidth = await page.locator('[data-bar="action-judge"]').evaluate(el => parseFloat(el.style.width));
+  const engineStart = await page.locator('[data-bar="engine-current"]').evaluate(el => parseFloat(el.style.left));
+  assert.equal(engineStart, 0); assert.ok(judgeStart > engineStart); assert.ok(judgeWidth > 60);
+  assert.equal(await page.locator('[data-demo=parallel] .lane').count(), 3);
 
   await visit('flow'); await page.locator('[data-demo="flow"] [data-reset]').click();
   await page.locator('[data-demo="flow"] [data-play]').click();

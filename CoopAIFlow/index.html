@@ -18,8 +18,8 @@
     <div class="deck-stage" data-deck data-deck-title="협력 AI 동작 흐름" data-deck-footer="더미 · 설계 예시 · API를 호출하지 않는 모의 재생">
       <section class="slide overview" data-title="음성 지시와 AI의 실제 행동">
         <header class="heading">
-          <p class="eyebrow">인간–AI 협력 퍼즐</p>
-          <h1>음성 지시와 AI의 실제 행동</h1>
+          <p class="eyebrow">인간–AI 협력 퍼즐 · 대화 AI + 행동 AI · 2026.09.19</p>
+          <h1>두 AI가 대화와 행동을 나눠 맡는다</h1>
           <p class="request">“내가 문을 통과할 때까지 <strong>파란 발판을 밟고 있어.</strong>”</p>
         </header>
 
@@ -27,14 +27,13 @@
           <svg class="connections" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
-              <marker id="plan-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
+              <marker id="flow-decision-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
             </defs>
             <path data-edge="voice-in" class="voice-wire" d="M160 82 H250"/>
             <path data-edge="voice-out" class="voice-wire" d="M250 108 H160"/>
             <path data-edge="request" d="M315 131 V202"/>
             <path data-edge="reply" class="voice-wire" d="M402 202 V131"/>
-            <path data-edge="fast" class="two-way" d="M288 298 V314 H100 V328"/>
-            <path data-edge="plan" class="two-way plan-wire" d="M390 298 V328"/>
+            <path data-edge="decision" class="two-way" d="M355 298 V328"/>
             <path data-edge="state" d="M570 159 H513 V223 H460"/>
             <path data-edge="action" d="M460 269 H538 V286 H570"/>
           </svg>
@@ -47,21 +46,18 @@
           <div class="node human-node" data-node="human">
             <span class="node-role">사람</span><strong>플레이어</strong><span class="node-detail" data-human-detail>말로 요청</span>
           </div>
-          <div class="node live-node" data-node="live">
-            <span class="node-role">음성 대화</span><strong>GPT-Live</strong><span class="node-detail" data-live-detail>듣기와 말하기</span>
+          <div class="node live-node" data-node="live" data-ai-role="conversation">
+            <span class="node-role">AI ① · GPT-Live</span><strong>대화 AI</strong><span class="node-detail" data-live-detail>듣기와 말하기</span>
           </div>
           <div class="node coordinator-node" data-node="coordinator">
-            <span class="node-role">우리가 구현</span><strong>조정기 + 기억</strong><span class="node-detail" data-coordinator-detail>지시와 상태를 연결</span>
+            <span class="node-role">일반 코드</span><strong>조정기 + 기억</strong><span class="node-detail" data-coordinator-detail>지시와 상태를 연결</span>
           </div>
-          <div class="node fast-node" data-node="fast">
-            <span class="node-role">지금 할 행동</span><strong>빠른 판단</strong><span class="node-detail" data-fast-detail>가능한 행동 중 선택</span>
-          </div>
-          <div class="node planner-node" data-node="planner">
-            <span class="node-role">복잡한 문제</span><strong>느린 계획</strong><span class="node-detail" data-planner-detail>필요할 때만 요청</span>
+          <div class="node action-agent-node" data-node="action" data-ai-role="action">
+            <span class="node-role">AI ② · LLM 한 개</span><strong>행동 AI</strong><span class="node-detail" data-action-detail>선택 · 계획 · 재판단</span>
           </div>
 
           <div class="game" data-node="engine">
-            <div class="game-heading"><h2>언리얼 실행기</h2><span class="execution-state" data-state>명령 대기</span></div>
+            <div class="game-heading"><h2>언리얼 <small>실행 코드</small></h2><span class="execution-state" data-state>명령 대기</span></div>
             <div class="grid-map" role="img" aria-label="AI는 파란 발판 앞에 있고 문은 닫혀 있다" data-map>
               <div class="travel-path" aria-hidden="true"></div>
               <div class="wall wall-top" aria-hidden="true"></div><div class="wall wall-bottom" aria-hidden="true"></div>
@@ -89,18 +85,18 @@
         <div class="playback">
           <div class="playback-buttons"><button class="button primary" type="button" data-play aria-pressed="false">재생</button><button class="button" type="button" data-previous>이전</button><button class="button" type="button" data-next>다음 단계</button><button class="button" type="button" data-reset>처음</button></div>
           <div class="step-progress"><span data-step-count>1 / 10</span><div class="step-dots" role="group" aria-label="동작 단계 선택" data-step-dots></div></div>
-          <label class="plan-option"><input type="checkbox" data-parallel>이동 중 계획도 요청</label>
+          <label class="reconsider-option"><input type="checkbox" data-reconsider>이동 중 같은 AI에 재판단</label>
           <span class="keyboard-help">← → 단계 이동 · F 전체 화면</span>
         </div>
         <p class="print-flow">① 음성 요청　② 전사·게임 JSON 연결　③ 행동 선택·검증　④ 이동·접촉 확인　⑤ 결과를 음성으로 안내</p>
 
         <aside class="speaker-notes">
-          <p>사람의 음성, AI에게 제공하는 게임 상태, 계층적 판단, 실제 이동과 발판 유지가 같은 장면에서 연결되는 구조다. 데이터와 움직임은 설명을 위한 예시이며 API와 게임을 실제 실행한 화면은 아니다.</p>
+          <p>사람의 음성, AI에게 제공하는 게임 상태, 대화 AI와 행동 AI의 판단, 실제 이동과 발판 유지가 같은 장면에서 연결되는 구조다. 데이터와 움직임은 설명을 위한 예시이며 API와 게임을 실제 실행한 화면은 아니다.</p>
           <p>GPT-Live의 기본 오디오는 WebRTC 미디어 트랙을 사용한다. 앱은 같은 세션의 데이터 이벤트와 서버 sideband로 전사·위임·문맥을 관리한다. client 위임의 생성 이벤트에는 지시문이 없으므로 전사와 기존 작업을 조정기에서 연결한다. 전사 delta의 누적이나 침묵만으로 지시를 확정하지 않고, 수정·부정·대상과 현재 상태를 확인한 뒤 실행한다.</p>
-          <p>게임 JSON, task_epoch, operation_id, hold_blue는 우리 앱의 예시 명세다. 모델은 후보를 제안하고 조정기가 현재 작업·대상·전제조건을 검사한다. Accepted는 명령 접수, Moving은 이동 중, Holding은 실제 발판 접촉 유지다. Holding 상태에서도 플레이어 통과 확인 전에는 작업이 끝나지 않는다.</p>
-          <p>‘이동 중 계획도 요청’을 켜면 역할 교대라는 추가 목표를 별도로 검토하는 경우를 보여준다. 느린 계획을 기다리는 동안 현재 유효한 이동과 유지 행동을 계속한다. 모델의 실행 시간이나 병렬 GPU 추론 성능을 측정한 예시는 아니다. 계획의 결과는 검증 후 후속 행동에 반영한다.</p>
+          <p>게임 JSON, task_epoch, operation_id, hold_blue는 우리 앱의 예시 명세다. 행동 AI 하나가 선택·계획·질문을 제안하고 일반 코드인 조정기가 현재 작업·대상·전제조건을 검사한다. Accepted는 명령 접수, Moving은 이동 중, Holding은 실제 발판 접촉 유지다. Holding 상태에서도 플레이어 통과 확인 전에는 작업이 끝나지 않는다.</p>
+          <p>AI는 대화 AI와 행동 AI 두 개다. 조정기·기억·언리얼 실행기는 일반 코드다. ‘이동 중 같은 AI에 재판단’을 켜면 추가 목표인 역할 교대를 같은 행동 AI가 검토한다. 이전 판단 요청은 이미 끝났으며 행동 AI의 새 요청을 한 번에 하나씩 처리한다. 유효한 이동·유지는 엔진에서 계속한다. 재판단 결과와 새 행동의 채택은 이 시연 범위 밖이며 별도 계획 AI는 추가하지 않는다.</p>
           <p>결과 회신의 session.commentary.append는 최대 500토큰의 문자열 content와 실제 받은 delegation_id를 사용한다. item_demo는 설명용 ID다. 회신 접수와 실제 음성 재생은 별개이며 마지막 단계는 결과를 음성으로 안내하는 전체 과정의 예시다.</p>
-          <p>근거: <a href="https://developers.openai.com/api/docs/guides/voice-webrtc?api=live">GPT-Live WebRTC</a>, <a href="https://developers.openai.com/api/docs/guides/live-conversations">세션·전사·문맥</a>, <a href="https://developers.openai.com/api/docs/guides/live-delegation">client delegation</a>, <a href="https://sites.google.com/view/overcooked-hla/">HLA</a>. <a href="../CoopAI/">15장 상세 설명</a>의 1·2·7페이지를 통합했다.</p>
+          <p>근거: <a href="https://developers.openai.com/api/docs/guides/voice-webrtc?api=live">GPT-Live WebRTC</a>, <a href="https://developers.openai.com/api/docs/guides/live-conversations">세션·전사·문맥</a>, <a href="https://developers.openai.com/api/docs/guides/live-delegation">client delegation</a>, <a href="https://sites.google.com/view/overcooked-hla/">HLA</a>. <a href="../CoopAI/">15장 상세 설명</a>의 1·2·7페이지를 통합했다. 2026-09-19 두 AI 구성으로 갱신했다.</p>
         </aside>
       </section>
     </div>
