@@ -9,6 +9,7 @@
       "slug": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$", "description": "공개 URL의 폴더명. 대소문자 변경 금지" },
       "title": { "type": "string", "minLength": 1 },
       "status": { "enum": ["draft", "published"], "default": "draft" },
+      "pdf": { "type": "boolean", "default": true, "description": "false이면 웹 전용 자료로 PDF 생성·배포·다운로드 링크를 생략" },
       "category": { "type": "string" },
       "date": { "type": "string", "format": "date" },
       "description": { "type": "string" },

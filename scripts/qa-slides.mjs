@@ -26,6 +26,7 @@ export async function qaSlides({ root = ROOT, slug, catalog = true } = {}) {
             await page.goto(server.url, { waitUntil: 'networkidle' });
             await page.locator('[data-deck-search]').waitFor({ state: 'visible' });
             if (await page.locator('.material').count() !== published.length) throw new Error('자료실 공개 목록 개수 오류');
+            if (await page.locator('.pdf-link').count() !== published.filter((deck) => deck.pdf !== false).length) throw new Error('자료실 PDF 링크 개수 오류');
             await page.screenshot({ path: path.join(outputRoot, 'home.png'), fullPage: true });
             await page.locator('[data-deck-search]').fill('__no_matching_deck_205__');
             if (!await page.locator('[data-empty-state]').isVisible()) throw new Error('자료 검색의 빈 결과 안내 오류');
@@ -33,9 +34,13 @@ export async function qaSlides({ root = ROOT, slug, catalog = true } = {}) {
             if (published.length) {
                 await page.locator('[data-deck-search]').fill(published[0].title);
                 if (!await page.locator('.material h3 a').first().isVisible()) throw new Error('자료 제목 검색 오류');
-                const pending = page.waitForEvent('download');
-                await page.locator('.pdf-link').first().click();
-                if (await (await pending).failure()) throw new Error('자료실 PDF 다운로드 실패');
+                const withPdf = published.find((deck) => deck.pdf !== false);
+                if (withPdf) {
+                    await page.locator('[data-deck-search]').fill(withPdf.title);
+                    const pending = page.waitForEvent('download');
+                    await page.locator('.pdf-link').first().click();
+                    if (await (await pending).failure()) throw new Error('자료실 PDF 다운로드 실패');
+                }
                 await page.locator('[data-deck-search]').fill('');
             }
             await page.locator('[data-deck-search]').blur();
@@ -54,11 +59,13 @@ export async function qaSlides({ root = ROOT, slug, catalog = true } = {}) {
             await page.waitForFunction(() => window.ppt205Deck?.slides?.length > 0);
             await page.evaluate(async () => { await document.fonts.ready; await Promise.all([...document.images].map((image) => image.decode())); });
             const count = await page.evaluate(() => window.ppt205Deck.slides.length);
-            if (!await page.locator('.deck-download').isVisible()) throw new Error(deck.slug + ': PDF 다운로드 버튼 없음');
-            const download = await page.request.get(server.url + '/' + deck.slug + '/downloads/' + deck.slug + '.pdf');
-            if (!download.ok()) throw new Error(deck.slug + ': PDF 다운로드 실패');
-            const pdf = await PDFDocument.load(await download.body());
-            if (pdf.getPageCount() !== count) throw new Error(deck.slug + ': PDF 페이지 수 불일치');
+            if (deck.pdf !== false) {
+                if (!await page.locator('.deck-download').isVisible()) throw new Error(deck.slug + ': PDF 다운로드 버튼 없음');
+                const download = await page.request.get(server.url + '/' + deck.slug + '/downloads/' + deck.slug + '.pdf');
+                if (!download.ok()) throw new Error(deck.slug + ': PDF 다운로드 실패');
+                const pdf = await PDFDocument.load(await download.body());
+                if (pdf.getPageCount() !== count) throw new Error(deck.slug + ': PDF 페이지 수 불일치');
+            } else if (await page.locator('.deck-download').count()) throw new Error(deck.slug + ': 웹 전용 자료에 PDF 버튼이 있습니다.');
             await page.addStyleTag({ content: '.slide { animation: none !important; }' });
             for (let index = 0; index < count; index += 1) {
                 await page.evaluate((target) => window.ppt205Deck.go(target), index);
@@ -99,7 +106,7 @@ export async function qaSlides({ root = ROOT, slug, catalog = true } = {}) {
             await contact.screenshot({ path: path.join(output, 'contact-sheet.png'), fullPage: true });
             await contact.close();
             results.push({ slug: deck.slug, slides: count });
-            console.log(deck.slug + ': ' + count + '장, 레이아웃·키보드·노트·PDF·인쇄 복귀 검증 통과');
+            console.log(deck.slug + ': ' + count + '장, 레이아웃·키보드·노트·' + (deck.pdf === false ? '웹 전용' : 'PDF') + '·인쇄 복귀 검증 통과');
         }
         if (errors.length) throw new Error('브라우저 오류:\n' + errors.join('\n'));
         return results;

@@ -39,10 +39,9 @@
 
         const actions = document.createElement('div');
         actions.className = 'material-actions';
-        for (const [label, href, className, arrow, download] of [
-            ['웹으로 보기', deck.slug + '/', 'open-link', '↗', false],
-            ['PDF 다운로드', deck.slug + '/downloads/' + deck.slug + '.pdf', 'pdf-link', '↓', true],
-        ]) {
+        const links = [['웹으로 보기', deck.slug + '/', 'open-link', '↗', false]];
+        if (deck.pdf !== false) links.push(['PDF 다운로드', deck.slug + '/downloads/' + deck.slug + '.pdf', 'pdf-link', '↓', true]);
+        for (const [label, href, className, arrow, download] of links) {
             const link = document.createElement('a');
             link.className = className;
             link.href = href;

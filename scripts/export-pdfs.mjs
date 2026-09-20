@@ -10,7 +10,7 @@ import { validateSite } from './lib/validate.mjs';
 
 export async function exportPdfs({ root = ROOT, slug } = {}) {
     const project = readProject(root);
-    const decks = selectDecks(project, slug);
+    const decks = selectDecks(project, slug).filter((deck) => deck.pdf !== false);
     await validateSite({ root, slug, checkSyntax: false });
     if (!decks.length) { console.log('PDF를 생성할 공개 자료가 없습니다.'); return []; }
     const server = await startServer(root);

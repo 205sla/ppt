@@ -27,6 +27,7 @@ export function readProject(root = ROOT) {
         seen.add(deck.slug.toLowerCase());
         if (typeof deck.title !== 'string' || !deck.title.trim()) throw new Error(`${deck.slug}: 제목이 없습니다.`);
         if (!['draft', 'published'].includes(deck.status || 'published')) throw new Error(`${deck.slug}: 상태는 draft 또는 published여야 합니다.`);
+        if (deck.pdf !== undefined && typeof deck.pdf !== 'boolean') throw new Error(`${deck.slug}: pdf는 true 또는 false여야 합니다.`);
         for (const field of ['category', 'description', 'meta']) {
             if (deck[field] !== undefined && typeof deck[field] !== 'string') throw new Error(`${deck.slug}: ${field}는 문자열이어야 합니다.`);
         }

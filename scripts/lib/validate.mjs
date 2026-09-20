@@ -36,7 +36,7 @@ export async function validateSite({ root = ROOT, slug, requirePdfs = false, for
         if (!slides || !/\bdata-deck(?:\s|=|>)/.test(html)) failures.push(`${deck.slug}: [data-deck]와 .slide가 필요합니다.`);
         if (!html.includes('../shared/deck.js') || !html.includes('../shared/deck.css')) failures.push(`${deck.slug}: 공통 deck.js와 deck.css를 연결하세요.`);
         if ((forPublication || (deck.status || 'published') === 'published') && /data-template-placeholder|\{\{[A-Z_]+\}\}/.test(html)) failures.push(`${deck.slug}: 템플릿의 임시 내용을 채우고 data-template-placeholder 표시를 제거하세요.`);
-        if (requirePdfs) {
+        if (requirePdfs && deck.pdf !== false) {
             const pdfPath = path.join(root, deck.slug, 'downloads', `${deck.slug}.pdf`);
             try {
                 const pdf = await PDFDocument.load(fs.readFileSync(pdfPath));

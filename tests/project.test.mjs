@@ -66,6 +66,8 @@ test('잘못된 상태와 날짜를 거부한다', (t) => {
     assert.throws(() => readProject(root), /상태/);
     fs.writeFileSync(path.join(root, 'decks.json'), JSON.stringify([{ slug: 'Invalid', title: '검사', status: 'draft', date: '2026-02-30' }]));
     assert.throws(() => readProject(root), /날짜/);
+    fs.writeFileSync(path.join(root, 'decks.json'), JSON.stringify([{ slug: 'Invalid', title: '검사', status: 'draft', pdf: 'false' }]));
+    assert.throws(() => readProject(root), /pdf/);
 });
 
 test('공개 페이지에서 비공개 원본으로 향하는 링크를 거부한다', async (t) => {
@@ -81,27 +83,36 @@ test('서로 다른 테마와 페이지 수의 자료를 PDF·배포·브라우�
     const root = fixture(t);
     createDeck({ root, slug: 'LightDeck', title: '자료 구성 예시', theme: 'light' });
     createDeck({ root, slug: 'DarkDeck', title: '발표 구성 예시', theme: 'dark' });
+    createDeck({ root, slug: 'WebOnly', title: '웹 전용 발표', theme: 'dark' });
     createDeck({ root, slug: 'DraftDeck', title: '미공개 초안' });
-    for (const slug of ['LightDeck', 'DarkDeck']) {
+    for (const slug of ['LightDeck', 'DarkDeck', 'WebOnly']) {
         const file = path.join(root, slug, 'index.html');
         let html = fs.readFileSync(file, 'utf8').replaceAll(' data-template-placeholder', '');
         if (slug === 'DarkDeck') html = html.replace(/<section class="slide" data-title="정리">[\s\S]*?<\/section>/, '');
+        if (slug === 'WebOnly') html = html.replace(/<a\b[^>]*class="deck-download"[^>]*>[\s\S]*?<\/a>/, '');
         fs.writeFileSync(file, html);
     }
     const project = readProject(root);
     project.decks.filter((deck) => deck.slug !== 'DraftDeck').forEach((deck) => { deck.status = 'published'; });
+    project.decks.find((deck) => deck.slug === 'WebOnly').pdf = false;
     writeDecks(project, project.decks);
     const generated = await exportPdfs({ root });
     assert.deepEqual(generated.map((result) => [result.slug, result.pages]), [['LightDeck', 4], ['DarkDeck', 3]]);
+    assert.ok(!fs.existsSync(path.join(root, 'WebOnly/downloads/WebOnly.pdf')));
+    assert.deepEqual(await exportPdfs({ root, slug: 'WebOnly' }), []);
+    fs.writeFileSync(path.join(root, 'WebOnly/downloads/WebOnly.pdf'), '이전 PDF는 웹 전용 배포에서 제외');
     const built = await buildSite({ root });
-    assert.equal(built.decks.length, 2);
+    assert.equal(built.decks.length, 3);
     assert.ok(!fs.existsSync(path.join(built.output, 'DraftDeck')));
     assert.ok(!fs.existsSync(path.join(built.output, 'templates')));
     assert.ok(!fs.existsSync(path.join(built.output, 'LightDeck/source')));
-    assert.equal(JSON.parse(fs.readFileSync(path.join(built.output, 'decks.json'), 'utf8')).length, 2);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(built.output, 'decks.json'), 'utf8')).length, 3);
+    assert.ok(!fs.existsSync(path.join(built.output, 'WebOnly/downloads/WebOnly.pdf')));
+    assert.doesNotMatch(fs.readFileSync(path.join(built.output, 'WebOnly/index.html'), 'utf8'), /deck-download/);
+    assert.doesNotMatch(fs.readFileSync(path.join(built.output, 'index.html'), 'utf8'), /WebOnly\/downloads/);
     assert.match(fs.readFileSync(path.join(built.output, 'index.html'), 'utf8'), /DarkDeck\/downloads\/DarkDeck.pdf/);
     const checked = await qaSlides({ root, catalog: false });
-    assert.deepEqual(checked.map((result) => result.slides), [4, 3]);
+    assert.deepEqual(checked.map((result) => result.slides), [4, 3, 4]);
     const proof = path.join(ROOT, 'test-results', 'template-proof');
     fs.mkdirSync(proof, { recursive: true });
     for (const slug of ['LightDeck', 'DarkDeck']) {
