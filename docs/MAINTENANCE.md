@@ -11,17 +11,19 @@ scripts/                  생성, 공개 상태, PDF, 검증, 배포 도구
 scripts/lib/              공통 목록 검증과 로컬 서버
 tests/                    생성부터 PDF·배포까지 통합 검증
 docs/                     작성과 관리 안내
-CoopAI/                   인간–AI 협력 퍼즐 자료
+AIGuide/                  처음 시작하는 AI 활용법 자료
   index.html
   styles.css
   deck.js
   assets/
-  downloads/              CoopAI.pdf
+  downloads/              AIGuide.pdf
   source/                 원본과 자료 전용 검사
 <새 자료>/                모든 자료에 같은 구조 적용
 _archive/                 사용하지 않는 슬라이드 원본 보관 (Git·배포 제외)
   Ease/                   이징 수업 원본·PDF·실습 파일·도구
   Ease.archive.json       원래 등록 정보·명령·파일 해시
+  CoopAI/ · CoopAIFlow/ · CommentAwards/   이전 공개 자료 원본·PDF
+  <폴더명>.archive.json   자료별 원래 등록 정보·파일 해시
 _site/                    공개 자료만 담은 배포 결과 (Git 제외)
 test-results/             검수 이미지와 임시 출력 (Git 제외)
 ```
@@ -38,7 +40,7 @@ test-results/             검수 이미지와 임시 출력 (Git 제외)
 | 특정 주제의 내용과 애니메이션 | 해당 자료 폴더 |
 | 특정 자료의 특별한 검사 | 해당 자료의 `source/qa.mjs` |
 
-공개 자료의 URL과 파일명은 사용자 요청 없이 변경하지 않습니다. 자료를 추가할 때 공통 CSS에 주제별 로고나 브랜드 색을 넣지 않습니다. `CoopAI/styles.css`처럼 개별 자료에서 공통 색상 변수를 재정의하세요.
+공개 자료의 URL과 파일명은 사용자 요청 없이 변경하지 않습니다. 자료를 추가할 때 공통 CSS에 주제별 로고나 브랜드 색을 넣지 않습니다. `AIGuide/styles.css`처럼 개별 자료에서 공통 색상 변수를 재정의하세요.
 
 ## 배포 원칙
 
@@ -55,6 +57,8 @@ Pull request에서는 검사와 배포 폴더 생성만 수행합니다. 실제 
 ## 로컬 보관과 복원
 
 2026-09-18 사용자 요청으로 이징 함수 자료 27개 파일을 `_archive/Ease/`로 옮기고 SHA-256 해시로 내용 보존을 확인했습니다. 원래 `Ease/`와 목록 등록은 Git에서 제거하며 다음 배포에서 기존 `/Ease/` 및 PDF 주소를 내립니다.
+
+2026-09-26 사용자 요청으로 `CoopAI`(7개 파일), `CoopAIFlow`(6개), `CommentAwards`(13개)를 같은 방식으로 `_archive/`에 옮기고 SHA-256 해시 일치를 확인했습니다. 목록 등록과 Git 추적을 제거해 기존 `/CoopAI/`, `/CoopAIFlow/`, `/CommentAwards/`와 PDF 주소를 내립니다.
 
 새 자료를 보관할 때:
 

@@ -5,8 +5,7 @@
 - 관리 폴더: `C:\Users\young\prg\ai\1. 동적 슬라이드`
 - 사이트: [ppt.205.kr](http://ppt.205.kr/)
 - GitHub: [205sla/ppt](https://github.com/205sla/ppt)
-- 상세 설명: [인간–AI 협력 퍼즐의 동작 구조](http://ppt.205.kr/CoopAI/) (대화 AI + 행동 AI 구성, 15장)
-- 한 장 통합: [협력 AI 동작 흐름](http://ppt.205.kr/CoopAIFlow/) (대화 AI + 행동 AI 구성, 1장 단계별 재생)
+- 현재 자료: [처음 시작하는 AI 활용법](http://ppt.205.kr/AIGuide/) (2026년 9월 기준, 28장)
 - 로컬 보관: `_archive/` (Git 추적·사이트 배포 제외)
 
 ## 새 슬라이드 만들기
@@ -76,6 +75,8 @@ npm run serve
 자료 전체를 `_archive/<기존 폴더명>/`에 옮기고 `decks.json`에서 등록을 제거합니다. `.gitignore`의 `/_archive/` 규칙으로 새 커밋에서 제외하며, 이미 추적하던 원래 경로의 삭제도 커밋해야 배포본에서 내려갑니다. 다음 배포부터 목록·웹 슬라이드·PDF의 기존 주소가 모두 제외됩니다.
 
 이징 함수 자료는 `_archive/Ease/`에 원본·이미지·PDF·엔트리 실습 파일·전용 도구를 보관했습니다. 원래 등록 정보, npm 명령, 파일 해시는 `_archive/Ease.archive.json`에 있습니다. 공통 `package.json`의 엔트리 전용 명령은 제거했습니다.
+
+협력 AI 자료(`CoopAI`, `CoopAIFlow`)와 좋은 댓글 시상식(`CommentAwards`)도 `_archive/`에 같은 방식으로 보관했습니다. 각 자료의 원래 등록 정보와 파일 해시는 `_archive/<폴더명>.archive.json`에 있습니다.
 
 다시 사용할 때는 폴더를 원래 루트 위치로 복원하고 보관한 등록 정보를 `decks.json`에 `draft` 상태로 추가합니다. 검수 후 명시적으로 공개합니다. 자세한 절차는 [구조와 운영](docs/MAINTENANCE.md#로컬-보관과-복원)을 참고하세요.
 

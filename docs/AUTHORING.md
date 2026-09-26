@@ -93,4 +93,4 @@ export default async function verify({ page, baseUrl, deck }) {
 }
 ```
 
-자료 전용 검사의 구현 예시는 `CoopAI/source/qa.mjs`입니다. 공통 기능을 변경했다면 밝은 테마와 어두운 테마, 다른 페이지 수를 함께 확인하는 `npm test`도 실행하세요.
+자료 전용 검사의 구현 예시는 `AIGuide/source/qa.mjs`입니다. 공통 기능을 변경했다면 밝은 테마와 어두운 테마, 다른 페이지 수를 함께 확인하는 `npm test`도 실행하세요.

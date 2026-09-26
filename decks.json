@@ -1,33 +1,5 @@
 [
   {
-    "slug": "CoopAI",
-    "title": "인간–AI 협력 퍼즐의 동작 구조",
-    "status": "published",
-    "category": "캡스톤",
-    "date": "2026-09-19",
-    "description": "대화 AI와 행동 AI, 게임 JSON, 언리얼 실행 코드를 단계별로 재생하는 협력 AI 설계",
-    "meta": "게임콘텐츠캡스톤디자인 · 더미 · 동적 슬라이드 15장"
-  },
-  {
-    "slug": "CoopAIFlow",
-    "title": "협력 AI 동작 흐름 · 통합 버전",
-    "status": "published",
-    "category": "캡스톤",
-    "date": "2026-09-19",
-    "description": "대화 AI와 행동 AI 두 개가 음성 요청과 발판 이동을 처리하는 과정을 한 화면에서 재생",
-    "meta": "더미 · 기존 1·2·7페이지 통합 · 동적 슬라이드 1장"
-  },
-  {
-    "slug": "CommentAwards",
-    "title": "좋은 댓글 시상식",
-    "status": "published",
-    "category": "학급 발표",
-    "date": "2026-09-20",
-    "description": "친구의 작품을 살핀 세 사람을 카운트다운과 효과음으로 소개하는 자동 재생 시상식",
-    "meta": "경희대 엔트리 게임반 1기 · 시상식 12장 · 약 1분 50초 · 웹 전용",
-    "pdf": false
-  },
-  {
     "slug": "AIGuide",
     "title": "처음 시작하는 AI 활용법",
     "status": "published",
