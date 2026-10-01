@@ -411,7 +411,20 @@ b, strong { font-weight: 800; }
 .co li:last-child { border-bottom: 0; }
 .co li b { display: block; color: var(--ink); font-size: 1.45cqw; }
 
-.co-note { margin: 0; padding: .9cqh 1.7cqw; border-top: 1px solid #ecebe6; color: var(--gpt); background: #eef7f5; font-size: 1.2cqw; font-weight: 700; }
+.co-note { margin: 0; padding: .9cqh 1.7cqw; border-top: 1px solid #ecebe6; color: var(--co, var(--gpt)); background: #f1f5f8; font-size: 1.2cqw; font-weight: 700; }
+
+/* 최근 발표: 날짜와 이용 가능 범위를 같은 줄에서 비교합니다. */
+.release-list { flex: 1; display: grid; align-content: center; gap: 1.6cqh; }
+.release-row { display: grid; grid-template-columns: 9cqw 1fr 24cqw; gap: 2cqw; align-items: center; padding: 2.3cqh 0; border-bottom: 1px solid var(--line); }
+.release-row time { color: var(--co); font-size: 1.65cqw; font-weight: 800; }
+.release-row h3 { margin: 0 0 .5cqh; font-size: 2.05cqw; }
+.release-row p { margin: 0; font-size: 1.5cqw; }
+.release-row .release-access { color: var(--co); font-size: 1.7cqw; font-weight: 800; }
+.release-access small { color: var(--muted); font-size: 1.25cqw; font-weight: 500; }
+.release-row .limited { color: var(--warm); }
+.source-note a { color: inherit; font: inherit; text-underline-offset: .15em; }
+.source-note a:hover { color: var(--accent); }
+.source-note a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* 성능 점수 비교 · 검증한 범주 색상: #1baf7a, #eb6834, #2a78d6, #4a3aa7 */
 .score { flex: 1; display: grid; grid-template-columns: 1.65fr .7fr; gap: 2.4cqw; }
@@ -422,20 +435,21 @@ b, strong { font-weight: 800; }
 .score-chart { display: flex; flex-direction: column; min-height: 0; padding: 1.6cqh 1.8cqw 1.4cqh; border: 1px solid var(--line); border-radius: 1.2cqw; background: #fff; }
 .score-chart .panel-title { margin-bottom: .6cqh; }
 .score-list { flex: 1; display: grid; grid-auto-rows: 1fr; min-height: 0; margin: 0; padding: 0; list-style: none; }
-.score-list li { display: grid; grid-template-columns: 16cqw 1fr 5.4cqw; gap: 1cqw; align-items: center; padding: 0 .6cqw; border-radius: .5cqw; font-size: 1.2cqw; line-height: 1.1; }
+.score-list li { display: grid; grid-template-columns: 20cqw 1fr 3cqw; gap: 1cqw; align-items: center; padding: 0 .6cqw; border-radius: .5cqw; font-size: 1.2cqw; line-height: 1.1; }
 .score-list li.korea { background: #f1effa; }
 .sc-name { font-weight: 700; white-space: nowrap; }
 .sc-name em { margin-left: .5cqw; padding: .1cqh .5cqw; border-radius: 99px; color: #fff; background: var(--bar); font-size: .95cqw; font-style: normal; font-weight: 800; }
 .sc-bar { display: block; height: 2cqh; border-left: 1px solid #b9bfc9; }
 .sc-bar i { display: block; width: calc(var(--v) * 100% / 60); height: 100%; border-radius: 0 4px 4px 0; background: var(--bar); }
+.estimated .sc-bar i { background: repeating-linear-gradient(135deg, var(--bar) 0 5px, #8e83ca 5px 8px); }
 .slide.is-active .sc-bar i { animation: grow-bar .8s both; animation-delay: calc(.15s + var(--i) * .07s); }
 @keyframes grow-bar { from { width: 0; } }
 .score-list b { font-size: 1.35cqw; font-variant-numeric: tabular-nums; }
 .score-list b small { margin-left: .3cqw; color: var(--muted); font-size: .95cqw; font-weight: 600; }
 .score-legend { display: flex; gap: 1.6cqw; margin: .6cqh 0 0; color: var(--muted); font-size: 1.15cqw; }
 .score-legend span::before { content: ""; display: inline-block; width: 1cqw; height: 1cqw; margin-right: .4cqw; border-radius: 2px; background: var(--bar); vertical-align: -.1cqw; }
-.score-side { display: grid; gap: 1.4cqh; align-content: center; }
-.score-side .card { padding: 1.8cqh 1.6cqw; }
+.score-side { display: grid; gap: 1cqh; align-content: center; }
+.score-side .card { padding: .8cqh 1.6cqw; }
 .score-side .card p { font-size: 1.45cqw; }
 .score-side .card b { display: block; margin-bottom: .4cqh; font-size: 1.7cqw; }
 .korea-card { border-color: #4a3aa7; background: #f3f1fb; }

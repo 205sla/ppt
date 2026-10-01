@@ -1,0 +1,108 @@
+{
+  "checked_on": "2026-10-01",
+  "timezone": "Asia/Seoul",
+  "release_date_basis": "Dates as printed by each publisher, not converted to Korean release dates.",
+  "sources": {
+    "openai_models": "https://learn.chatgpt.com/docs/models",
+    "sol_launch": "https://learn.chatgpt.com/docs/changelog#codex-2026-09-29-gpt-61-sol",
+    "sonnet_launch": "https://www.anthropic.com/claude-sonnet-5-5",
+    "argon_launch": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/",
+    "aa_sol": "https://artificialanalysis.ai/articles/gpt-6-1-sol-replaces-gpt-6-sol-after-just-7-days-with-near-astra-intelligence",
+    "aa_sonnet": "https://artificialanalysis.ai/articles/claude-sonnet-5-5",
+    "aa_argon": "https://artificialanalysis.ai/articles/gemini-4-argon-google-top-three-labs",
+    "aa_luna_fable": "https://artificialanalysis.ai/models/releases/comparisons/gpt-6-luna-vs-claude-fable-5-1",
+    "aa_solar": "https://artificialanalysis.ai/models/solar-mini4",
+    "aa_motif": "https://artificialanalysis.ai/models/motif-3",
+    "epoch": "https://epoch.ai/publications/the-plunging-price-of-thought",
+    "openai_pricing": "https://learn.chatgpt.com/docs/pricing",
+    "claude_pricing": "https://claude.com/pricing",
+    "google_plans": "https://one.google.com/intl/ko_kr/about/google-ai-plans/",
+    "google_family": "https://support.google.com/googleone/answer/14534406?hl=ko",
+    "work": "https://learn.chatgpt.com/docs/get-started-with-work"
+  },
+  "intelligence_index": {
+    "publisher": "Artificial Analysis",
+    "version": "4.3.2",
+    "models": [
+      {
+        "name": "Claude Opus 5.5",
+        "score": 58,
+        "configuration": "max",
+        "source": "aa_sonnet"
+      },
+      {
+        "name": "Claude Sonnet 5.5",
+        "score": 56,
+        "configuration": "max",
+        "source": "aa_sonnet"
+      },
+      {
+        "name": "GPT-6 Astra",
+        "score": 53,
+        "configuration": "max",
+        "source": "aa_argon"
+      },
+      {
+        "name": "Claude Fable 5.1",
+        "score": 53,
+        "configuration": "max",
+        "source": "aa_luna_fable"
+      },
+      {
+        "name": "Gemini 4 Argon",
+        "score": 53,
+        "configuration": "high; restricted access",
+        "source": "aa_argon"
+      },
+      {
+        "name": "GPT-6.1 Sol",
+        "score": 52,
+        "configuration": "max",
+        "source": "aa_argon"
+      },
+      {
+        "name": "Gemini 3.8 Flash",
+        "score": 41,
+        "configuration": "high",
+        "source": "aa_argon"
+      },
+      {
+        "name": "GPT-6 Luna",
+        "score": 37,
+        "configuration": "max",
+        "source": "aa_luna_fable"
+      },
+      {
+        "name": "Motif 3",
+        "score": 34,
+        "configuration": "reasoning",
+        "estimated": true,
+        "source": "aa_motif"
+      },
+      {
+        "name": "Gemini 3.1 Pro",
+        "score": 30,
+        "configuration": "Preview",
+        "source": "aa_argon"
+      },
+      {
+        "name": "Solar Mini 4",
+        "score": 24,
+        "configuration": "reasoning",
+        "source": "aa_solar"
+      }
+    ],
+    "caveats": [
+      "Selected models only; not a complete leaderboard.",
+      "Sonnet 5.5 results use a pre-release deployment; public release fixes a structured-output bug and reevaluation is pending.",
+      "Gemini 4 Argon is restricted to selected partners.",
+      "Motif 3 is listed by Artificial Analysis at 34 as an estimate, with independent evaluation forthcoming; the slide labels and hatches this bar accordingly.",
+      "Solar Mini 4 is a recent small model, not a claim of the highest-performing Korean model. The global index does not establish Korean-language quality."
+    ]
+  },
+  "pricing_notes": [
+    "Google KR price did not render in the public official page; KRW 29,000 is explicitly an illustrative family cost calculation.",
+    "US web monthly subscription prices are not guaranteed KRW checkout prices.",
+    "Epoch AI prices are rounded; 725x is the source calculation, not the ratio of the rounded display values."
+  ]
+}
