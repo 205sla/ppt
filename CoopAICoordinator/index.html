@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="대화 AI와 행동 AI 사이에서 지시·게임 상태를 연결하고 실행 결과를 관리하는 조정기. 이영호의 2026년 10월 첫 주 구현과 10월 8일 통합 목표.">
+    <title>협력 게임 AI 조정기 설계와 구현 | 이영호</title>
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../shared/deck.css">
+    <link rel="stylesheet" href="../shared/themes/light.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="../shared/deck.js" defer></script>
+    <script src="deck.js" defer></script>
+</head>
+<body>
+    <a class="deck-download" href="downloads/CoopAICoordinator.pdf" download>PDF 다운로드 <span aria-hidden="true">↓</span></a>
+    <main class="deck-shell">
+        <div class="deck-stage" data-deck data-deck-title="협력 게임 AI 조정기 설계와 구현" data-deck-footer="게임콘텐츠캡스톤디자인 · 더미 1팀 · 이영호 · 2026.10.02">
+
+            <section class="slide cover is-active" data-title="조정기 설계와 이번 주 구현">
+                <p class="eyebrow">WEEKLY REVIEW / 2026.10.02</p>
+                <div class="cover-layout">
+                    <div>
+                        <p class="cover-topic">인간–AI 협동 게임</p>
+                        <h1>조정기 설계와<br>이번 주 구현</h1>
+                        <p class="cover-lead">말로 한 부탁이<br>게임 속 행동으로 이어지도록</p>
+                        <p class="byline"><strong>이영호</strong> · 더미 1팀<br>게임콘텐츠캡스톤디자인 / 지도교수 이대호</p>
+                    </div>
+                    <div class="cover-system" aria-label="대화 AI와 행동 AI를 조정기가 연결하고 Unreal이 실행하는 구조">
+                        <div class="model-label"><span>AI 01</span><strong>대화 AI</strong><small>사용자의 의도와 대화</small></div>
+                        <div class="system-connector" aria-hidden="true">↓</div>
+                        <div class="coordinator-label"><small>이번 주 구현 · 영호</small><strong>조정기</strong><span>맥락 구성 · 응답 검사 · 결과 관리</span></div>
+                        <div class="cover-branches"><span>↕ 행동 선택</span><span>↕ 실행·결과</span></div>
+                        <div class="cover-bottom"><div><small>AI 02</small><strong>행동 AI</strong></div><div><small>일반 코드</small><strong>Unreal 실행기</strong></div></div>
+                        <p class="system-note">AI는 2개. 조정기·기억·실행기는 일반 코드.</p>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p>약 40초. 프로젝트는 사람이 AI 동료와 음성으로 협동하는 Unreal 3D 퍼즐입니다. 저는 대화와 게임 행동 사이를 연결하는 조정기를 맡았습니다. AI는 대화 AI 하나와 행동 AI 하나이며 조정기를 별도 AI로 추가하지 않았습니다. 이번 주에는 공통 흐름과 모의 왕복을 구현했고, 실제 팀원 퍼즐과 모델을 붙이는 작업은 다음 단계입니다.</p>
+                    <p>기준: 2026-10-02 사용자 제공 흐름도·주간 회의 내용, 2026-09-30 구현 기록, 2026-10-01 main 반영 및 재검증 기록. 코드 기준 커밋: 869708ee3902a51966cc3721003b9a257545cd67.</p>
+                </aside>
+            </section>
+
+            <section class="slide sequence-slide" data-title="요청이 실제 실행으로 이어지는 순서" id="sequence-slide">
+                <p class="eyebrow">01 / 전체 설계</p>
+                <h2>조정기가 대화·게임 상태·행동 판단을 연결</h2>
+                <p class="subline">사용자가 확정한 지시를 받아, 현재 가능한 행동을 판단하고 실행기에 전달합니다.</p>
+                <svg class="sequence-chart" viewBox="0 0 1320 444" role="img" aria-labelledby="sequence-title sequence-desc">
+                    <title id="sequence-title">사용자가 제공한 설계 흐름을 다시 그린 시퀀스 다이어그램</title>
+                    <desc id="sequence-desc">대화 AI가 지시를 조정기로 보낸다. 조정기가 게임 필터의 현재 관측 JSON을 받고 지시, 대화와 기억을 행동 AI에 전달한다. 행동 AI의 제안을 검증한 뒤 Unreal 실행기로 전달한다.</desc>
+                    <defs><marker id="arrow-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs>
+                    <g class="lifelines"><path d="M140 68V422 M450 68V422 M845 68V422 M1170 68V422"/></g>
+                    <g class="lane dialogue"><rect x="20" y="4" width="240" height="64" rx="8"/><text x="140" y="43">대화 AI</text></g>
+                    <g class="lane coordinator"><rect x="330" y="4" width="240" height="64" rx="8"/><text x="450" y="43">조정기 · 영호</text></g>
+                    <g class="lane filter"><rect x="725" y="4" width="240" height="64" rx="8"/><text x="845" y="43">게임 필터 · 경민</text></g>
+                    <g class="lane action"><rect x="1050" y="4" width="240" height="64" rx="8"/><text x="1170" y="43">행동 AI · 준영</text></g>
+                    <g class="sequence-step" data-sequence-step="0"><text x="295" y="100">① 확정된 사용자 지시</text><path d="M140 116H450"/></g>
+                    <g class="sequence-step" data-sequence-step="1"><text x="647" y="161">② 현재 관측 가능한 게임 상태 요청</text><path d="M450 177H845"/></g>
+                    <g class="sequence-step response" data-sequence-step="2"><text x="647" y="220">③ 위치·발판·장애물·가능 행동 JSON</text><path d="M845 236H450"/></g>
+                    <g class="sequence-step" data-sequence-step="3"><text x="810" y="280">④ 지시 + 최신 상태 + 대화·관련 기억</text><path d="M450 296H1170"/></g>
+                    <g class="sequence-step response" data-sequence-step="4"><text x="810" y="340">⑤ 가능한 후보에서 선택한 행동 제안</text><path d="M1170 356H450"/></g>
+                    <g class="sequence-step execute-step" data-sequence-step="5"><rect x="304" y="381" width="294" height="51" rx="6"/><text x="451" y="413">⑥ 검증 후 Unreal 실행기로</text></g>
+                </svg>
+                <div class="sequence-bottom">
+                    <p class="step-caption" data-sequence-caption aria-live="polite"></p>
+                    <div class="demo-controls" aria-label="설계 흐름 재생">
+                        <button type="button" data-sequence="reset" title="첫 단계">처음</button><button type="button" data-sequence="previous" title="이전 단계">이전</button><button type="button" data-sequence="play" class="primary">순서 재생</button><button type="button" data-sequence="next" title="다음 단계">다음 →</button>
+                    </div>
+                </div>
+                <p class="bottom-insight">실행 뒤에는 <strong>Unreal이 확인한 진행·완료·실패</strong>를 조정기가 다시 받습니다.</p>
+                <aside class="speaker-notes">
+                    <p>약 1분. 사용자가 제공한 4개 역할의 시퀀스 다이어그램을 기준으로 설명합니다. 순서 재생 버튼을 누르면 각 메시지를 강조합니다. 대화 AI의 행동 요청 후보는 현재 구현에서 사용자가 확정한 뒤 조정기로 들어옵니다. 게임 필터는 관측 가능한 사실과 행동 후보를 주며 대화는 넣지 않습니다. 조정기가 대화와 관련 기억을 합쳐 행동 AI에 전달합니다. 행동 AI가 고른 제안은 조정기의 응답 검사와 최신 상태 재검사를 거쳐 실행 명령으로 바뀝니다. 실제 엔진 결과가 돌아와야 진행 상태를 갱신합니다.</p>
+                    <p>원본: 사용자 첨부 설계 이미지(2026-10-02). 구현 근거: <a href="https://github.com/205sla/CapstoneDesign/blob/869708ee3902a51966cc3721003b9a257545cd67/LiveDemo/docs/coordinator/INTEGRATION.md">조정기 통합 안내</a>. 저장소 접근 권한이 필요할 수 있습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide" data-title="판단 입력과 실행 전 검사">
+                <p class="eyebrow">02 / 조정기의 판단 입력</p>
+                <h2>지시·대화·게임 사실을 한 번에 전달</h2>
+                <p class="subline">모델이 무엇을 보고 선택했는지 추적할 수 있도록 입력과 실행 결과를 연결했습니다.</p>
+                <div class="context-layout">
+                    <div class="input-bundle">
+                        <p class="small-label">행동 AI에 전달하는 맥락</p>
+                        <blockquote><span>확정된 사용자 지시</span>“내가 문을 통과할 때까지<br>파란 발판을 밟고 있어.”</blockquote>
+                        <div class="context-row"><strong>최신 관측</strong><p>관측 가능한 객체·상태·관계<br>지금 실행 가능한 행동 후보</p></div>
+                        <div class="context-row"><strong>대화·관련 기억</strong><p>사용자와 대화 AI 양쪽 발화<br>관련된 요청·맥락과 출처</p></div>
+                        <div class="context-row"><strong>최근 실행 결과</strong><p>현재 진행 중인 행동과<br>게임에서 확인한 실제 결과</p></div>
+                    </div>
+                    <div class="validation-block">
+                        <p class="small-label">행동 제안을 받은 뒤</p>
+                        <h3>바로 실행하기 전에<br>세 가지를 확인</h3>
+                        <ol class="number-list">
+                            <li><strong>허용된 행동인가?</strong><span>현재 관측의 후보·대상과 일치</span></li>
+                            <li><strong>아직 같은 요청인가?</strong><span>수정·취소 전의 늦은 응답 제외</span></li>
+                            <li><strong>지금도 실행 가능한가?</strong><span>재관측 + Unreal의 최종 검사</span></li>
+                        </ol>
+                        <p class="fact-rule">AI가 “도착했다”고 말한 것과<br><strong>게임에서 확인한 도착</strong>을 구분합니다.</p>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p>약 50초. 입력을 조합하는 것뿐 아니라 정보의 출처와 시점을 유지하는 것이 핵심입니다. AI의 말은 대화이고 위치나 발판 상태는 게임 관측입니다. 모델은 관측에서 제공한 후보 중 하나를 선택합니다. 선택 응답의 요청 ID와 후보를 검사하고 새로 관측한 뒤 실행합니다. 행동 전제의 변경은 guard로, 실제 엔진 쪽 검사는 CanExecuteGameAction으로 확인합니다. 현재 실제 게임 바인딩 전의 기본값은 false입니다.</p>
+                    <p>관련 기억은 현재 코드의 제한된 메모리 관리 범위입니다. 장기 기억 DB나 별도 기억 요약 AI를 구현했다는 의미가 아닙니다. 설명용 발판 요청은 모의 시나리오입니다. 출처: <a href="https://github.com/205sla/CapstoneDesign/blob/869708ee3902a51966cc3721003b9a257545cd67/LiveDemo/docs/coordinator/README.md">조정기 구현 안내</a>.</p>
+                </aside>
+            </section>
+
+            <section class="slide puzzle-slide" data-title="발판 도착과 요청 완료의 차이" id="puzzle-slide">
+                <p class="eyebrow">03 / 실행 결과를 관리하는 이유</p>
+                <h2>발판에 도착해도, 요청은 아직 진행 중</h2>
+                <p class="subline">“내가 통과할 때까지 밟고 있어.” → <strong>통과할 때까지 유지했는지</strong>를 확인해야 완료입니다.</p>
+                <div class="puzzle-layout">
+                    <div class="puzzle-scene">
+                        <div class="scene-header"><span>협동 퍼즐 예시</span><span class="simulation-tag">설명용 모의 시연</span></div>
+                        <svg class="puzzle-map" viewBox="0 0 760 386" role="img" aria-labelledby="puzzle-title puzzle-desc">
+                            <title id="puzzle-title">AI가 발판을 유지하는 동안 플레이어가 문을 통과하는 모의 퍼즐</title>
+                            <desc id="puzzle-desc">AI는 왼쪽에서 파란 발판으로 이동한다. 플레이어가 자신의 발판을 작동한 뒤 문을 통과할 때까지 AI가 파란 발판을 유지한다. 실제 게임이나 모델을 호출하지 않는 설명용 애니메이션이다.</desc>
+                            <defs><pattern id="map-grid" width="70" height="70" patternUnits="userSpaceOnUse"><path d="M70 0H0V70" fill="none" stroke="#d3e3df" stroke-width="1"/></pattern></defs>
+                            <rect x="20" y="26" width="700" height="280" rx="8" fill="#edf4f1"/><rect x="20" y="26" width="700" height="280" fill="url(#map-grid)"/>
+                            <rect x="215" y="48" width="100" height="70" rx="5" fill="#a9b7b3"/><text class="map-object-label" x="265" y="90">장애물</text>
+                            <path d="M95 166H385" class="route-path"/><text class="route-label" x="225" y="146">이동 경로</text>
+                            <rect x="350" y="130" width="70" height="70" rx="10" class="blue-plate"/>
+                            <rect x="490" y="225" width="70" height="55" rx="8" fill="#f4d58a" stroke="#b2852d" stroke-width="2"/>
+                            <text class="map-label" x="385" y="231">AI 발판</text><text class="map-label" x="520" y="329">플레이어 발판</text>
+                            <path d="M596 26V109 M596 227V306" stroke="#778f87" stroke-width="16"/>
+                            <rect x="586" y="109" width="20" height="118" rx="4" class="puzzle-door"/>
+                            <text class="map-label" x="600" y="70">문</text>
+                            <text class="exit-label" x="666" y="262">통과 지점</text>
+                            <path d="M628 278H704" stroke="#668f7e" stroke-width="2" stroke-dasharray="4 6"/>
+                            <g class="ai-token" data-ai-token><circle r="25"/><text y="7">AI</text></g>
+                            <g class="player-token" data-player-token><circle r="23"/><text y="6">나</text></g>
+                            <text class="map-hint" x="26" y="369">게임이 제공한 객체·행동 후보를 기준으로 선택</text>
+                        </svg>
+                        <div class="demo-controls" aria-label="퍼즐 상태 시연"><button type="button" data-puzzle="reset">처음</button><button type="button" data-puzzle="previous">이전</button><button type="button" data-puzzle="play" class="primary">시연 재생</button><button type="button" data-puzzle="next">다음 →</button></div>
+                    </div>
+                    <div class="puzzle-events">
+                        <p class="small-label">Unreal → 조정기 상태 보고</p>
+                        <ol class="event-list">
+                            <li data-event="0"><span>접수</span><code>accepted</code></li>
+                            <li data-event="1"><span>이동 중</span><code>moving</code></li>
+                            <li data-event="2"><span>발판 유지</span><code>holding</code></li>
+                            <li data-event="3"><span>플레이어 통과 대기</span><code>waiting_for_player</code></li>
+                            <li data-event="4"><span>통과까지 유지 확인</span><code>completed</code></li>
+                        </ol>
+                        <p class="completion-rule">완료 조건<br><strong>플레이어 통과 + 통과까지 발판 유지</strong></p>
+                    </div>
+                </div>
+                <div class="puzzle-status" aria-live="polite"><strong data-puzzle-phase>접수</strong><span data-puzzle-caption></span></div>
+                <aside class="speaker-notes">
+                    <p>약 1분. 기존 CoopAIFlow의 단계 재생과 격자 퍼즐 표현을 재사용했습니다. 이것은 구현된 상태 규칙을 설명하는 모의 애니메이션이며 실제 Unreal이나 모델을 호출하지 않습니다. 플레이어 발판의 구체적인 작동·유지 규칙은 실제 맵을 연결할 때 맞춥니다. 장면은 AI 발판의 유지와 플레이어 통과를 강조한 예시입니다.</p>
+                    <p>시연 재생을 눌러 접수, 이동, 발판 유지, 통과 대기, 완료를 보여 줍니다. moving/holding/waiting_for_player는 status=running의 phase입니다. holding과 waiting에서는 plate_held=true가, 완료에서는 player_passed=true와 held_until_passage=true가 실제 결과로 확인되어야 합니다. 도착만으로 완료 처리하지 않습니다. PDF에는 통과 대기 장면과 전체 상태 목록을 담습니다.</p>
+                    <p>출처: <a href="https://github.com/205sla/CapstoneDesign/blob/869708ee3902a51966cc3721003b9a257545cd67/LiveDemo/docs/coordinator/INTEGRATION.md">실행 결과 계약</a>.</p>
+                </aside>
+            </section>
+
+            <section class="slide contracts-slide" data-title="팀원을 연결하는 데이터 형식 5종">
+                <p class="eyebrow">04 / 이번 주 구현 · 연결 규격</p>
+                <h2>각자 만든 기능은 JSON 5종으로 연결</h2>
+                <p class="subline">게임·모델의 내부 구현이 바뀌어도, 양끝의 변환 코드를 바꿔 연결할 수 있도록 설계했습니다.</p>
+                <table class="contract-table">
+                    <thead><tr><th>데이터</th><th>누가 누구에게</th><th>전달하는 내용</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="row-no">01</span><strong>게임 관측</strong><code>observation</code></td><td>경민의 게임 필터 <b>→</b> 영호</td><td>현재 보이는 객체·상태·실행 가능한 행동</td></tr>
+                        <tr><td><span class="row-no">02</span><strong>판단 입력</strong><code>decision_input</code></td><td>영호 <b>→</b> 준영의 행동 AI</td><td>사용자 지시·대화·기억·최신 관측</td></tr>
+                        <tr><td><span class="row-no">03</span><strong>판단 응답</strong><code>decision_response</code></td><td>준영의 행동 AI <b>→</b> 영호</td><td>허용된 후보에서 고른 행동 / 되물을 질문</td></tr>
+                        <tr><td><span class="row-no">04</span><strong>실행 명령</strong><code>execution_command</code></td><td>영호 <b>→</b> 준영의 Unreal 실행기</td><td>검사를 통과한 행동·실행 ID·실행 조건</td></tr>
+                        <tr><td><span class="row-no">05</span><strong>실행 결과</strong><code>execution_event</code></td><td>준영의 Unreal 실행기 <b>→</b> 영호</td><td>실제 접수·이동·유지·완료·실패·정지</td></tr>
+                    </tbody>
+                </table>
+                <div class="contract-bottom"><p><strong>현재 행동 후보</strong> <code>move_to</code> <code>hold_plate</code> <code>wait</code></p><p>공통 계약 v1 구현 · 실제 팀원 규격과 대조 예정</p></div>
+                <aside class="speaker-notes">
+                    <p>약 1분. 이번 주 만든 연결부 5개는 JSON 데이터 계약 5종입니다. Unreal Blueprint 함수 5개와는 다른 구분입니다. 경민은 게임 관측, 준영은 판단 응답과 실제 실행 결과를 연결하면 됩니다. 저는 관측을 받아 입력을 만들고, 응답을 검사해 실행 명령을 보냅니다. 현재 행동은 이동, 발판 유지, 대기이며 팀의 실제 게임 행동 이름과 맞출 예정입니다.</p>
+                    <p>모델이 공통 JSON을 바로 받으면 ACTION_MODEL_URL로 연결하고, 기존 채팅 API 등의 형태를 유지하면 decide 어댑터에서 변환합니다. 객체 ID, 좌표와 시점, 실제 접촉·통과 이벤트는 게임 쪽과 합의해야 합니다. 팀원 API 주소와 맵 경로가 없어 경계를 분리해 두었습니다. 출처: <a href="https://github.com/205sla/CapstoneDesign/tree/869708ee3902a51966cc3721003b9a257545cd67/LiveDemo/docs/coordinator/contracts">JSON Schema와 예제</a>.</p>
+                </aside>
+            </section>
+
+            <section class="slide implementation-slide" data-title="이번 주 영호가 구현한 부분">
+                <p class="eyebrow">05 / 이번 주 구현 · 조정기 동작</p>
+                <h2>요청부터 실행 결과까지 관리하는 흐름 구현</h2>
+                <p class="subline">개발 화면에서 지시 전달·취소와 실행 상태를 확인하며, 연결부를 모의 환경에서 검증했습니다.</p>
+                <div class="implementation-layout">
+                    <figure class="implementation-figure">
+                        <img src="assets/coordinator-holding.png" alt="10월 1일 검증한 조정기 개발 화면 상단. mock 모드에서 발판을 유지하며 플레이어 통과를 기다리는 상태와 지시·취소 버튼이 보인다.">
+                        <figcaption>개발 화면 상단 발췌 · mock 모드 · 2026.10.01<br><a href="assets/coordinator-holding.png" target="_blank" rel="noopener">전체 검증 화면 보기 ↗</a></figcaption>
+                    </figure>
+                    <div class="implementation-points">
+                        <div><span class="point-no">01</span><h3>음성 요청 연결</h3><p>대화에서 행동 요청 후보 생성<br>사용자 확정 후 조정기로 전달</p></div>
+                        <div><span class="point-no">02</span><h3>변경·취소 처리</h3><p>이전 요청의 늦은 응답 제외<br>중복 명령·역순 결과 검사</p></div>
+                        <div><span class="point-no">03</span><h3>실제 결과 기준 관리</h3><p>완료·실패·정지 확인을 구분<br>결과 미확인은 미확인으로 유지</p></div>
+                    </div>
+                </div>
+                <p class="implementation-note"><strong>10/1 main 반영</strong> <code>869708e</code><span>실제 퍼즐·모델·새 게임 음성 경로의 통합 시연은 남아 있습니다.</span></p>
+                <aside class="speaker-notes">
+                    <p>약 50초. 실제 개발한 화면의 모의 실행 검증 스크린샷입니다. 사진 속 mock 표시는 실제 팀원 게임을 연결한 화면이 아니라는 뜻입니다. 왼쪽에서 요청을 보내고 취소할 수 있으며, 위의 상태는 접수가 아니라 발판 유지 중임을 보여 줍니다. 음성 연결에서는 조각 전사나 위임 이벤트만으로 바로 실행하지 않고 사용자가 후보를 확정합니다.</p>
+                    <p>요청 수정·취소 뒤 늦게 온 모델 결과는 버립니다. 실행 연결이 끊기면 실패나 완료를 임의로 만들지 않고 미확인 상태로 남겨 중복 실행을 막습니다. HTTP 취소만으로 엔진 정지를 확인하지 않습니다. 코드 기준은 10/1 main 커밋 869708e입니다. 이후 팀원 사용법 문서의 로컬 추가와는 구분합니다.</p>
+                    <p>화면 출처: 2026-10-01 조정기 UI 재검증의 coordinator-holding.png. 출처: <a href="https://github.com/205sla/CapstoneDesign/commit/869708ee3902a51966cc3721003b9a257545cd67">main 반영 커밋</a>.</p>
+                </aside>
+            </section>
+
+            <section class="slide verification-slide" data-title="검증한 범위와 남은 통합">
+                <p class="eyebrow">06 / 검증 범위</p>
+                <h2>공통 흐름은 검증했고, 실제 팀원 통합은 다음</h2>
+                <p class="subline">2026.10.01 재검증 결과 · 외부 모델·게임·음성 서비스는 모의 환경</p>
+                <div class="test-metrics">
+                    <div><strong>55<span>개</span></strong><h3>Node 테스트 통과</h3><p>기존 34 + 신규 21</p></div>
+                    <div><strong>5<span>개</span></strong><h3>새 개발 화면 통과</h3><p>접수·유지·완료·질문 등</p></div>
+                    <div><strong>11<span>개</span></strong><h3>기존 브라우저 회귀 통과</h3><p>기존 웹 기능 영향 확인</p></div>
+                </div>
+                <div class="verification-columns">
+                    <div><p class="small-label">직접 확인한 범위</p><ul><li>관측 → 판단 → 유지·통과 완료의 모의 왕복</li><li>지연 응답·취소·중복·실행 미확인 처리</li><li>UE 5.8.3 Editor·Game 빌드 통과 <span class="inline-note">(9/30)</span></li><li>기존 Unreal 출력·연결 회귀 <span class="inline-note">(9/30)</span></li></ul></div>
+                    <div class="remaining"><p class="small-label">실제 연결로 확인할 범위</p><ul><li>경민의 퍼즐 관측 JSON과 실시간 갱신</li><li>준영의 모델 응답과 실제 캐릭터 동작</li><li>새 게임 모드의 실제 마이크·음성 왕복</li><li>명령부터 행동 시작까지 걸리는 시간</li></ul></div>
+                </div>
+                <p class="test-footnote">테스트 개수는 통과한 시나리오 수입니다. 실제 게임 성능이나 모델 정확도 수치가 아닙니다.</p>
+                <aside class="speaker-notes">
+                    <p>약 40초. 55개 모두가 이번 주 새 기능 테스트는 아닙니다. 기존 34개와 이번에 추가한 21개를 합친 수치입니다. Chrome을 실제로 실행했지만 게임·모델·새 음성 경로는 모의 데이터로 검증했습니다. UE 5.8.3 Editor와 Game Development 빌드, 기존 문자 출력의 ACK·연결·잠금 회귀는 9/30 실제 엔진에서 확인했습니다. 이는 새 퍼즐의 실제 이동이나 새 음성 종단 검증과 다릅니다. Shipping 패키징도 아닙니다.</p>
+                    <p>팀원이 각자 구현했다고 보고한 자연어 입력·이동, 퍼즐 상태 추출은 존재하지만 이 조정기와의 실제 통합은 아직 검증하지 않았습니다. 1초 이하 응답도 측정 결과가 아니라 개선 목표 의견입니다. 출처: <a href="https://github.com/205sla/CapstoneDesign/blob/869708ee3902a51966cc3721003b9a257545cd67/LiveDemo/docs/coordinator/TEST_RESULTS.md">9/30 검증 및 10/1 재검증 기록</a>.</p>
+                </aside>
+            </section>
+
+            <section class="slide next-slide" data-title="10월 8일까지 실제 움직임으로 연결">
+                <p class="eyebrow">07 / 다음 주 공동 목표</p>
+                <div class="next-heading"><p class="deadline">10.08<span>까지</span></p><h2>말로 내린 명령이<br>실제 움직임으로 이어지게</h2></div>
+                <div class="next-layout">
+                    <div class="next-work">
+                        <p class="small-label">회의에서 정한 다음 작업</p>
+                        <div class="assignment"><strong>이영호</strong><p>실제 데이터를 받도록 연결 작업 마무리<br><span>게임 관측·모델 응답·실행 결과 연결</span></p></div>
+                        <div class="assignment"><strong>서준영</strong><p>게임 JSON의 행동을 실제 동작으로 연결<br><span>조정기 입력을 보고 가능한 행동을 선택·반환</span></p></div>
+                        <p class="unassigned">방경민의 다음 주 세부 작업은 회의 원문에 미기재</p>
+                    </div>
+                    <div class="next-requests">
+                        <p class="small-label">통합을 위해 함께 맞출 것 · 제안</p>
+                        <h3>게임과 모델의 실제 입출력</h3>
+                        <p><strong>게임 쪽</strong> 객체 ID·상태 JSON·접촉/통과 이벤트<br><strong>모델 쪽</strong> API 주소·요청/응답 예제·행동 목록</p>
+                        <h3>음성 시연과 시간 측정</h3>
+                        <p>확정 지시 → 판단 → 실제 움직임 확인<br>모델 응답과 행동 시작 지연을 나눠 측정</p>
+                        <p class="target-note">1초 이하 응답은 개선 희망 목표 · 현재 실측값 없음</p>
+                    </div>
+                </div>
+                <p class="closing-line">이번 주에는 연결 구조를 만들었고, 다음 주에는 <strong>실제 게임 데이터로 연결을 확인</strong>합니다.</p>
+                <aside class="speaker-notes">
+                    <p>약 45초. 10월 2일 전달받은 회의 내용에서 10월 8일까지의 목표는 말로 내린 명령이 실제 움직임으로 이어지는 것입니다. 영호의 실제 데이터 연결, 준영의 행동 선택과 실제 동작 연결은 전달된 작업입니다. 경민의 다음 주 세부 업무는 비어 있어 임의로 배정하지 않았습니다.</p>
+                    <p>오른쪽은 통합을 위해 제안하는 자료와 확인 순서입니다. 우선 확정 텍스트 한 건이 실제 게임에서 왕복하는지 확인하고, 실제 마이크·음성 흐름을 연결합니다. 모델 응답 시간과 캐릭터 행동 시작 시간을 분리해 측정할 것을 제안합니다. 1초 이하 목표의 측정 구간과 성능 기준은 아직 확정되지 않았습니다. 교수님께 논의할 점: 처음에는 제한된 사전 정보와 행동 후보를 제공하는 실험으로 시작하고, 이후 정보 제공 범위를 바꿔 비교할지입니다. 이는 논의안이며 확정한 실험 설계가 아닙니다.</p>
+                    <p>출처: 2026-10-02 사용자 전달 주간 회의 결정. 정확한 회의 개최일은 원문에 없으며 날짜는 수신일 기준입니다.</p>
+                </aside>
+            </section>
+        </div>
+    </main>
+    <nav class="deck-controls" aria-label="슬라이드 이동"><button type="button" data-deck-previous title="이전 슬라이드 (←)">←</button><span class="deck-count" data-deck-count aria-live="polite"></span><button type="button" data-deck-next title="다음 슬라이드 (→)">→</button></nav>
+    <div class="deck-progress-track" aria-hidden="true"><div class="deck-progress" data-deck-progress></div></div>
+    <aside class="notes-panel" data-deck-notes aria-label="발표자 노트"></aside>
+</body>
+</html>

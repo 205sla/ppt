@@ -7,5 +7,14 @@
     "date": "2026-10-01",
     "description": "AI의 원리부터 최신 모델 비교와 앱 활용까지, GPT-6.1 Sol·Sonnet 5.5·Gemini 4 Argon 소식을 반영한 입문 안내",
     "meta": "2026년 10월 1일 기준 · 동적 슬라이드 29장"
+  },
+  {
+    "slug": "CoopAICoordinator",
+    "title": "협력 게임 AI 조정기 설계와 구현",
+    "status": "published",
+    "category": "캡스톤디자인",
+    "date": "2026-10-02",
+    "description": "대화 AI와 행동 AI 사이를 잇는 조정기의 설계, 이영호의 이번 주 구현과 10월 8일 통합 목표",
+    "meta": "2026년 10월 2일 · 교수님 소개용 · 동적 슬라이드 8장"
   }
 ]
