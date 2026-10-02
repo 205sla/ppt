@@ -22,7 +22,7 @@
    if (kind === 'skeleton' || kind === 'blend') {
      const phase = u < .18 ? 0 : u < .31 ? 1 : u < .59 ? 2 : 3;
      const response = u < .2 ? 0 : Math.sin(clamp((u - .2) / .75, 0, 1) * Math.PI) * Math.exp(-Math.max(0, u - .43) * 2.5);
-     const angle = -19 * response;
+     const angle = 19 * response;
      const upper = el.querySelector('.upper-body');
      upper.setAttribute('transform', `rotate(${angle.toFixed(2)} 260 232)`);
      el.querySelector('.arm-left').setAttribute('transform', `rotate(${(14 * response).toFixed(2)} 217 135)`);

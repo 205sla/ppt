@@ -6,6 +6,13 @@ export default async function verify({ page }) {
  const before=await page.evaluate(()=>window.hitReactionPage.states[0].time);
  await page.waitForTimeout(260);
  assert.ok(await page.evaluate(t=>window.hitReactionPage.states[0].time>t,before),'autoplay');
+ await page.waitForFunction(()=>Number(document.querySelector('[data-animation="skeleton"]').dataset.phase)>=1);
+ assert.ok(await page.evaluate(()=>{
+   const el=document.querySelector('[data-animation="skeleton"]');
+   const upper=new DOMPoint(260,232).matrixTransform(el.querySelector('.upper-body').getCTM());
+   const lower=new DOMPoint(260,232).matrixTransform(el.querySelector('.lower-body').getCTM());
+   return Math.hypot(upper.x-lower.x,upper.y-lower.y)<.01;
+ }),'rotating upper body must stay attached to pelvis');
  await page.locator('#motion-toggle').click();
  const frozen=await page.evaluate(()=>window.hitReactionPage.states[0].time);
  await page.waitForTimeout(180);
