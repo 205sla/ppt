@@ -1,5 +1,5 @@
 from pathlib import Path
-import json, html, shutil
+import json, html, shutil, re
 
 root=Path(__file__).parent
 out=root.parent if root.name=='source' else root/'build'
@@ -141,6 +141,11 @@ document='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta nam
 (out/'index.html').write_text(document,encoding='utf8')
 (out/'source'/'references.json').write_text(json.dumps(refs,ensure_ascii=False,indent=2),encoding='utf8')
 (out/'source'/'slides.json').write_text(json.dumps([{'number':i+1,'html':s} for i,s in enumerate(slides)],ensure_ascii=False,indent=2),encoding='utf8')
+plain=lambda value: html.unescape(re.sub(r'<[^>]+>', ' ', value)).strip()
+notes=['# 장별 발표 노트', '', '본문 24장 + 참고문헌 2장. 그림 확대, 방향키 이동, N 발표자 노트.', '']
+for i,s in enumerate(slides):
+    notes += [f'## {i+1}. '+plain(re.search(r'<h2>(.*?)</h2>',s).group(1)), '', plain(re.search(r'<aside class="speaker-notes">(.*?)</aside>',s).group(1)), '']
+(out/'source'/'speaker-notes.md').write_text('\n'.join(notes),encoding='utf8')
 if Path(__file__).resolve() != (out/'source'/'author.py').resolve():
     shutil.copyfile(__file__,out/'source'/'author.py')
 print(f'Authored {len(slides)} slides')
