@@ -187,6 +187,28 @@
             setStep(scene, scene.step + (event.key === 'ArrowDown' ? 1 : -1));
         });
 
+        // 공통 deck.js는 버튼·링크에 포커스가 있으면 발표 키를 무시합니다. 하단 이동 버튼을 마우스로 누르면
+        // 포커스가 그 버튼에 남아 → 키와 N이 듣지 않으므로, 이 자료의 버튼·링크에서만 같은 동작을 대신 실행합니다.
+        // 스페이스·Enter·Tab은 버튼과 링크의 기본 동작 그대로 두고, 포커스도 옮기지 않습니다.
+        const PRESENTER_KEYS = { arrowright: 'next', pagedown: 'next', arrowleft: 'previous', pageup: 'previous', home: 'first', end: 'last', n: 'notes', f: 'fullscreen' };
+        const presenterKey = (event) => {
+            const action = PRESENTER_KEYS[event.key.toLowerCase()];
+            const control = event.target instanceof Element ? event.target.closest('button, a[href]') : null;
+            if (printing || !action || !control || event.altKey || event.ctrlKey || event.metaKey) return;
+            event.preventDefault();
+            // 공통 deck.js가 나중에 버튼 포커스를 처리하게 바뀌어도 두 번 넘어가지 않도록 여기서 멈춥니다.
+            event.stopPropagation();
+            if (action === 'next') deck.next();
+            else if (action === 'previous') deck.previous();
+            else if (action === 'first') deck.go(0);
+            else if (action === 'last') deck.go(deck.slides.length - 1);
+            else if (action === 'notes') deck.toggleNotes();
+            else deck.toggleFullscreen();
+        };
+        for (const area of [document.querySelector('.deck-controls'), document.querySelector('.deck-download'), deck.root]) {
+            area?.addEventListener('keydown', presenterKey);
+        }
+
         window.addEventListener('deck:prepareprint', preparePrint);
         window.addEventListener('afterprint', () => {
             if (params.has('print')) return;

@@ -46,6 +46,108 @@ export default async function verify({ page, baseUrl, deck }) {
             return !!el && el.checkVisibility({ opacityProperty: true, visibilityProperty: true, checkOpacity: true, checkVisibilityCSS: true });
         }, selector);
         const status = () => p.locator('.slide.is-active .step-status').innerText();
+        const focused = () => p.evaluate(() => {
+            const el = document.activeElement;
+            if (!el || el === document.body) return 'body';
+            if (el.hasAttribute('data-deck-next')) return 'next';
+            if (el.hasAttribute('data-deck-previous')) return 'previous';
+            return el.tagName + '.' + el.className;
+        });
+        const notesShown = () => p.evaluate(() => document.body.classList.contains('show-notes')
+            && document.querySelector('[data-deck-notes]').innerText.replace(/\s+/g, ' ').trim() === document.querySelector('.slide.is-active .speaker-notes').textContent.replace(/\s+/g, ' ').trim());
+
+        // ── 공통 이동 버튼을 마우스로 누른 뒤에도 방향키·N이 바로 작동(공개 화면에서 재현된 문제) ──
+        assert.equal(await current(), 0, '새로 열면 1쪽');
+        await p.locator('[data-deck-next]').click();
+        assert.equal(await p.locator('[data-deck-count]').innerText(), `2 / ${count}`);
+        assert.equal(await focused(), 'next', '재현 조건: 클릭한 다음 버튼에 포커스가 남음');
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 2, '다음 버튼 클릭 뒤 → 키로 다음 장');
+        await p.keyboard.press('KeyN');
+        assert.equal(await notesShown(), true, '다음 버튼 클릭 뒤 N 키로 현재 장 노트');
+        await p.keyboard.press('KeyN');
+        assert.equal(await p.evaluate(() => document.body.classList.contains('show-notes')), false);
+        await p.keyboard.press('ArrowLeft');
+        assert.equal(await current(), 1, '다음 버튼 클릭 뒤 ← 키');
+        await p.locator('[data-deck-next]').click();
+        await p.locator('[data-deck-previous]').click();
+        assert.equal(await focused(), 'previous', '재현 조건: 클릭한 이전 버튼에 포커스가 남음');
+        assert.equal(await current(), 1);
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 2, '이전 버튼 클릭 뒤 → 키');
+        await p.keyboard.press('PageUp');
+        assert.equal(await current(), 1, 'PageUp');
+        assert.equal(await focused(), 'previous', '발표 키를 처리해도 포커스는 그대로');
+        await p.keyboard.press('End');
+        assert.equal(await current(), count - 1, 'End');
+        await p.keyboard.press('Home');
+        assert.equal(await current(), 0, 'Home');
+        // 첫 장에서는 이전 버튼이 비활성이 되어 브라우저가 포커스를 내려놓습니다. 그래도 키는 계속 작동해야 합니다.
+        await p.keyboard.press('ArrowRight');
+        await p.keyboard.press('ArrowLeft');
+        assert.equal(await current(), 0, '첫 장에서 이전 버튼이 비활성이 된 뒤에도 방향키');
+
+        // 장면 단계(단계 버튼·↓ ↑ 키)와 이동 버튼을 섞어 쓰기, 뒤로 돌아오기·다시 들어오기
+        await p.locator('[data-deck-next]').click();
+        assert.equal(await current(), 1);
+        assert.equal(await step('request'), 0, '이동 버튼으로 앞에서 들어오면 0단계');
+        await p.keyboard.press('ArrowDown');
+        assert.equal(await step('request'), 1, '이동 버튼에 포커스가 있어도 ↓ 키는 장면 단계');
+        await p.locator('.slide.is-active [data-step-next]').click();
+        assert.equal(await step('request'), 2);
+        assert.equal(await current(), 1, '단계 조작 중 슬라이드 유지');
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 2, '단계 버튼 클릭 뒤 → 키');
+        await p.locator('[data-deck-previous]').click();
+        assert.equal(await current(), 1);
+        assert.equal(await step('request'), 2, '이전 버튼으로 뒤에서 돌아오면 완성 단계');
+        await p.keyboard.press('ArrowUp');
+        assert.equal(await step('request'), 1, '이전 버튼 포커스 상태에서 ↑ 키');
+        await p.keyboard.press('ArrowLeft');
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 1);
+        assert.equal(await step('request'), 0, '앞에서 다시 들어오면 0단계');
+
+        // 키보드만 쓰는 경우: Tab으로 버튼에 가고, Enter·스페이스는 버튼 기본 동작(한 번만 이동), 방향키·N도 작동
+        await go(0);
+        await p.evaluate(() => document.activeElement?.blur());
+        for (let tabs = 0; tabs < 20 && await focused() !== 'next'; tabs += 1) await p.keyboard.press('Tab');
+        assert.equal(await focused(), 'next', 'Tab으로 다음 버튼에 도달');
+        await p.keyboard.press('Enter');
+        assert.equal(await current(), 1, 'Enter로 한 장');
+        await p.keyboard.press('Space');
+        assert.equal(await current(), 2, '스페이스로 한 장(두 번 넘어가지 않음)');
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 3, '키보드 포커스 상태에서 → 키');
+        assert.equal(await focused(), 'next', '키보드 포커스 유지');
+        await p.keyboard.press('KeyN');
+        assert.equal(await notesShown(), true, '키보드 포커스 상태에서 N 키');
+        await p.keyboard.press('KeyN');
+        await p.keyboard.press('Shift+Tab');
+        assert.equal(await focused(), 'previous', 'Shift+Tab은 가로채지 않음');
+        await p.keyboard.press('Enter');
+        assert.equal(await current(), 2, '이전 버튼 Enter');
+        assert.equal(await step('roles'), 2, '이전 버튼으로 뒤에서 돌아오면 완성 단계');
+        await p.locator('.slide.is-active [data-step-replay]').focus();
+        await p.keyboard.press('Enter');
+        assert.equal(await step('roles'), 0, '다시 재생 버튼 Enter');
+        await p.locator('.slide.is-active [data-step-next]').focus();
+        await p.keyboard.press('Space');
+        assert.equal(await step('roles'), 1, '단계 버튼 스페이스는 단계만');
+        assert.equal(await current(), 2, '단계 버튼 스페이스로 슬라이드가 넘어가지 않음');
+        await p.keyboard.press('Enter');
+        assert.equal(await step('roles'), 2, '단계 버튼 Enter');
+        await p.keyboard.press('ArrowRight');
+        assert.equal(await current(), 3, '단계 버튼 포커스 상태에서 → 키');
+        // 링크(PDF·정리 장)에 포커스가 남아도 방향키 작동
+        await p.locator('.deck-download').focus();
+        await p.keyboard.press('ArrowLeft');
+        assert.equal(await current(), 2, 'PDF 버튼 포커스 상태에서 ← 키');
+        await go(count - 1);
+        await p.locator('.slide.is-active a.button').first().focus();
+        await p.keyboard.press('ArrowLeft');
+        assert.equal(await current(), count - 2, '정리 장 링크 포커스 상태에서 ← 키');
+        await p.evaluate(() => document.activeElement?.blur());
 
         // ── 범위: 완성 작품·편집기 장, 게임 실행, 영상·iframe 없이 하네스 원리만 다룹니다. ──
         assert.equal(await p.locator('.deck-stage iframe, .deck-stage video, .deck-stage audio, .deck-stage embed, .deck-stage object, .deck-stage canvas, .deck-stage img').count(), 0, '영상·게임·편집기 화면을 넣지 않음');
@@ -296,5 +398,5 @@ export default async function verify({ page, baseUrl, deck }) {
     } finally {
         await p.close();
     }
-    console.log(`${deck.slug}: 범위·순서·66/66 출처, 노트, 자동 전환 없음, 숨은 장 정지, 다시 재생, 단계↔슬라이드 분리, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
+    console.log(`${deck.slug}: 이동 버튼 클릭 뒤 방향키·N, Tab·Enter·스페이스, 범위·순서·66/66 출처, 노트, 자동 전환 없음, 숨은 장 정지, 다시 재생, 단계↔슬라이드 분리, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
 }
