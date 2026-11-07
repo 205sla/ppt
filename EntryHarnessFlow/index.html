@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="엔트리 바이브코딩 하네스가 요청을 받아 명세 작성, 정적 검사, 작품 생성, 실행·관찰, 작품별 검사, 피드백을 거쳐 엔트리 작품을 만들고 고치는 과정을 단계별로 설명합니다.">
+    <title>엔트리 바이브코딩 — 하네스는 어떻게 작동할까</title>
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../shared/deck.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="../shared/deck.js" defer></script>
+    <script src="deck.js" defer></script>
+</head>
+<body>
+    <a class="deck-download" href="downloads/EntryHarnessFlow.pdf" download>PDF 다운로드 <span aria-hidden="true">↓</span></a>
+    <main class="deck-shell">
+        <div class="deck-stage" data-deck data-deck-title="엔트리 바이브코딩 — 하네스는 어떻게 작동할까" data-deck-footer="엔트리 바이브코딩 · 하네스는 어떻게 작동할까">
+
+            <section class="slide cover is-active" data-title="엔트리 바이브코딩">
+                <p class="eyebrow">2026 SW중심대학 연합 AI·SW페스티벌</p>
+                <div class="cover-grid">
+                    <div class="cover-copy">
+                        <h1>엔트리 바이브코딩</h1>
+                        <p class="cover-sub">AI 기반 엔트리 작품 제작·검증 하네스</p>
+                        <p class="cover-question">하네스는 어떻게 작동할까</p>
+                        <p class="lead">AI가 엔트리 작품을 만들고, 실행해 보고, 고치는 과정을 단계별로 따라갑니다.</p>
+                        <p class="author">이영호 · 경희대학교 소프트웨어융합학과</p>
+                    </div>
+                    <div class="cover-stack" role="img" aria-label="세 주체: 기존 AI 에이전트, 엔트리 하네스, 공개 엔트리 엔진">
+                        <div class="sheet ai"><b>기존 AI 에이전트</b><span>기존 도구</span></div>
+                        <span class="sheet-link" aria-hidden="true"></span>
+                        <div class="sheet mine"><b>엔트리 하네스</b><span>이 작품에서 만든 부분</span></div>
+                        <span class="sheet-link" aria-hidden="true"></span>
+                        <div class="sheet base"><b>공개 엔트리 엔진</b><span>기존 도구</span></div>
+                    </div>
+                </div>
+                <p class="cover-help"><kbd>→</kbd> 다음 장 <kbd>↓</kbd> 장면 단계 <kbd>N</kbd> 발표자 노트 <kbd>F</kbd> 전체 화면</p>
+                <aside class="speaker-notes">
+                    <p>안녕하세요. 엔트리 바이브코딩을 소개하겠습니다. 이 작품은 AI가 엔트리 작품을 만들고, 직접 실행해 보고, 문제를 고칠 수 있도록 돕는 하네스입니다.</p>
+                    <p>오늘은 완성된 게임보다 요청이 들어온 뒤 하네스 안에서 어떤 일이 일어나는지에 집중하겠습니다. 오른쪽 그림처럼 기존 AI 에이전트와 공개 엔트리 엔진은 그대로 쓰고, 그 둘을 잇는 가운데 부분을 만들었습니다.</p>
+                    <p>조작: → 다음 장, ↓ 장면 단계, N 발표자 노트, F 전체 화면.</p>
+                </aside>
+            </section>
+
+            <section class="slide request" data-title="요청" data-scene="request" data-steps="예문 입력|작업 시작|실제 요청">
+                <p class="eyebrow">01 · 요청</p>
+                <h2>시작은 AI 에이전트에게 보내는 요청입니다</h2>
+                <div class="req-stage">
+                    <div class="chat">
+                        <div class="chat-head"><span class="ai-mark" aria-hidden="true">AI</span><b>AI 에이전트</b><span class="tag dashed">설명용 예문</span></div>
+                        <div class="chat-log">
+                            <p class="bubble" data-show="1">엔트리로 레이싱 게임 만들어줘</p>
+                            <p class="working" data-show="1"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>하네스의 지식과 도구로 작업을 시작합니다</p>
+                        </div>
+                        <div class="chat-input">
+                            <span class="typed" data-show="&lt;=0" data-typewriter>엔트리로 레이싱 게임 만들어줘</span>
+                            <span class="placeholder" data-show="1">요청을 입력하세요</span>
+                            <span class="send" aria-hidden="true">↑</span>
+                        </div>
+                    </div>
+                    <figure class="real-req" data-show="2">
+                        <figcaption><b>실제 제작 요청</b><span class="tag">2026-09-23 · 원문</span></figcaption>
+                        <blockquote>이 프로젝트의 <mark style="--m:0">지식과 도구를 활용</mark>해, 유튜브에서 “이게 엔트리로 된다고?”라는 반응이 나올 만한 아웃런 스타일 3D 레이싱 게임(<mark style="--m:1">커브·언덕·라이벌 차·랩타임</mark>)을 최종본까지 완성해줘. <mark style="--m:2">순수 엔트리 블록만으로 동작하는 .ent</mark>여야 하고, 중간에 묻지 말고 <mark style="--m:3">실제 플레이 검증까지 끝낸 뒤 보고</mark>해줘.</blockquote>
+                        <p class="real-note">표시한 부분: 요청에 담긴 조건</p>
+                    </figure>
+                </div>
+                <div class="caption-swap">
+                    <p data-show="&lt;=1">요청을 받은 AI 에이전트가 준비된 엔트리 하네스로 작품 제작을 시작합니다.</p>
+                    <p data-show="2">설명을 위해 줄인 예문입니다. 실제 요청은 더 자세했고, 플레이 검증까지 포함했습니다.</p>
+                </div>
+                <aside class="speaker-notes">
+                    <p>시작은 AI 에이전트에게 보내는 요청입니다. 화면의 “엔트리로 레이싱 게임 만들어줘”는 설명을 위해 짧게 줄인 예문입니다.</p>
+                    <p>(↓) 요청을 보내면 AI 에이전트가 미리 준비된 하네스의 지식과 도구를 가지고 작업을 시작합니다.</p>
+                    <p>(↓) 실제 제작 때 보낸 요청은 이렇게 더 자세했습니다. 프로젝트의 지식과 도구를 쓸 것, 커브·언덕·라이벌 차·랩타임, 순수 엔트리 블록만으로 동작하는 .ent 파일, 그리고 실제 플레이 검증까지 끝내고 보고하라는 조건이 들어 있었습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide roles" data-title="역할 나누기" data-scene="roles" data-steps="세 층|층 사이 흐름|맡는 일">
+                <p class="eyebrow">02 · 역할 나누기</p>
+                <h2>기존 도구 둘 사이를 하네스가 잇습니다</h2>
+                <div class="layers">
+                    <article class="layer ai">
+                        <div class="layer-id"><span class="ai-mark" aria-hidden="true">AI</span><div><h3>기존 AI 에이전트</h3><p>Codex · Claude Code 등 기존 제품</p></div></div>
+                        <div class="layer-tags"><span class="duty" data-show="2">게임 동작 · 명세 결정 · 수정</span><span class="badge">기존 도구</span></div>
+                    </article>
+                    <div class="flows" data-show="1">
+                        <span class="flow down ai"><b>도구 실행</b><i class="shaft"><i class="dot"></i></i></span>
+                        <span class="flow up obs"><i class="shaft"><i class="dot"></i></i><b>오류·상태 보고</b></span>
+                    </div>
+                    <article class="layer mine">
+                        <div class="layer-top">
+                            <div class="layer-id"><h3>엔트리 하네스</h3><span class="badge solid">이 작품에서 만든 부분</span></div>
+                            <div class="layer-tags"><span class="duty" data-show="2">형식 변환 · 실행 · 검사</span></div>
+                        </div>
+                        <ul class="modules">
+                            <li><b>지식·작업 지침</b><span>엔트리 규칙 · 제작 순서 · 해결 사례 문서</span></li>
+                            <li><b>명세·생성 도구</b><span>DSL 중간 명세 → .ent 작품 생성기</span></li>
+                            <li><b>편집기 연결</b><span>로컬 편집기 호스트로 작품 불러오기·저장</span></li>
+                            <li><b>실행·검사 도구</b><span>정적 검사 · 실행 관찰 · 작품별 규칙 검사</span></li>
+                        </ul>
+                    </article>
+                    <div class="flows" data-show="1">
+                        <span class="flow down mine"><b>작품·키 입력</b><i class="shaft"><i class="dot"></i></i></span>
+                        <span class="flow up obs"><i class="shaft"><i class="dot"></i></i><b>상태·화면·소리</b></span>
+                    </div>
+                    <article class="layer base">
+                        <div class="layer-id"><div><h3>공개 엔트리 엔진</h3><p>@entrylabs/entry 공개 배포본(Apache-2.0) · 엔진 소스는 고치지 않고 연결</p></div></div>
+                        <div class="layer-tags"><span class="badge">기존 도구</span></div>
+                    </article>
+                </div>
+                <aside class="speaker-notes">
+                    <p>이 그림이 작품의 핵심 구조입니다. 맨 위는 Codex나 Claude Code 같은 기존 AI 에이전트, 맨 아래는 공개된 엔트리 엔진입니다. 둘 다 기존 도구이고, 엔진 소스는 고치지 않았습니다.</p>
+                    <p>제가 만든 것은 가운데의 엔트리 하네스입니다. 지식·작업 지침, 명세·생성 도구, 편집기 연결, 실행·검사 도구 네 부분으로 이루어져 있습니다.</p>
+                    <p>(↓) AI는 하네스의 도구를 실행하고, 하네스는 오류와 상태를 AI에게 돌려줍니다. 아래로는 작품과 키 입력을 엔진에 넣고, 엔진의 상태·화면·소리를 받아 옵니다.</p>
+                    <p>(↓) 정리하면, 게임을 어떻게 움직일지 정하고 고치는 판단은 AI가 하고, 형식 변환·실행·검사는 도구가 맡습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide overview" data-title="제작 과정 6단계" data-scene="overview" data-steps="전체 흐름|① 명세 작성|② 정적 검사|③ 작품 생성|④ 실행·관찰|⑤ 작품별 검사|⑥ 피드백|다시 ①부터">
+                <p class="eyebrow">03 · 제작 과정</p>
+                <h2>요청을 받으면 하네스 안에서 6단계가 이어집니다</h2>
+                <div class="pipe-wrap">
+                    <ol class="pipe">
+                        <li class="st ai" data-now="1 7">
+                            <span class="st-n">1</span>
+                            <h3>명세 작성</h3>
+                            <p class="st-who"><b>AI</b><code>spec-dsl.mjs</code></p>
+                            <p class="st-desc">게임의 오브젝트와 동작을 중간 명세로</p>
+                            <p class="st-out" data-show="1">명세 spec.mjs</p>
+                        </li>
+                        <li class="st tool" data-now="2">
+                            <span class="st-n">2</span>
+                            <h3>정적 검사</h3>
+                            <p class="st-who"><b>도구</b><code>validateSpec</code></p>
+                            <p class="st-desc">생성 전에 블록·입력·참조 확인</p>
+                            <p class="st-out" data-show="2">통과 · 오류 위치</p>
+                        </li>
+                        <li class="st tool" data-now="3">
+                            <span class="st-n">3</span>
+                            <h3>작품 생성</h3>
+                            <p class="st-who"><b>도구</b><code>make-ent.mjs</code></p>
+                            <p class="st-desc">명세를 .ent 작품 파일로 변환</p>
+                            <p class="st-out" data-show="3">.ent 작품 파일</p>
+                        </li>
+                        <li class="st tool" data-now="4">
+                            <span class="st-n">4</span>
+                            <h3>실행·관찰</h3>
+                            <p class="st-who"><b>도구</b><code>editor-harness<br>play-check</code></p>
+                            <p class="st-desc">실행하고 키를 눌러 변화를 기록</p>
+                            <p class="st-out" data-show="4">관찰 보고</p>
+                        </li>
+                        <li class="st tool" data-now="5">
+                            <span class="st-n">5</span>
+                            <h3>작품별 검사</h3>
+                            <p class="st-who"><b>도구</b><code>verify.mjs</code></p>
+                            <p class="st-desc">기대값과 실제값을 비교</p>
+                            <p class="st-out" data-show="5">통과·실패 집계</p>
+                        </li>
+                        <li class="st ai" data-now="6 7">
+                            <span class="st-n">6</span>
+                            <h3>피드백</h3>
+                            <p class="st-who"><b>AI</b><span class="st-tool">AI 에이전트</span></p>
+                            <p class="st-desc">결과를 읽고 명세를 고침</p>
+                            <p class="st-out" data-show="6">고친 명세</p>
+                        </li>
+                    </ol>
+                    <div class="pipe-loop" data-show="7">
+                        <svg viewBox="0 0 898 64" aria-hidden="true" focusable="false">
+                            <defs><marker id="loop-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#cdbdff"/></marker></defs>
+                            <path d="M830 4 C830 58, 68 58, 68 8" fill="none" stroke="#cdbdff" stroke-width="3" marker-end="url(#loop-head)"/>
+                        </svg>
+                        <p>고친 명세로 ①부터 다시</p>
+                    </div>
+                </div>
+                <p class="legend"><span class="ai">AI가 판단하는 단계</span><span class="tool">도구가 처리하는 단계</span></p>
+                <aside class="speaker-notes">
+                    <p>요청을 받은 뒤 하네스 안에서는 이 6단계가 이어집니다. 보라색은 AI가 판단하는 단계, 주황색은 도구가 처리하는 단계입니다.</p>
+                    <p>(↓를 누를 때마다) 각 단계가 다음 단계로 무엇을 넘기는지 보여 줍니다. 명세가 정적 검사를 통과하면 작품 파일이 되고, 실행 관찰 보고와 검사 결과가 다시 AI에게 돌아갑니다.</p>
+                    <p>(마지막) AI가 고친 명세는 다시 1단계부터 같은 과정을 거칩니다. 다음 장부터 한 단계씩 자세히 보겠습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide spec" data-title="① 명세 작성" data-scene="spec" data-steps="명세 코드|↑ 가속|↓ 브레이크|← → 조향|한눈에">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="1"></ol></header>
+                <h2>① AI가 게임 동작을 중간 명세로 씁니다</h2>
+                <div class="spec-body">
+                    <div class="spec-agent">
+                        <div class="agent-card"><span class="ai-mark" aria-hidden="true">AI</span><b>AI 에이전트</b><span>게임 동작을 정하고 명세로 작성</span></div>
+                        <p class="mini-label">이 10줄에 담긴 동작</p>
+                        <div class="behaviors">
+                            <button type="button" class="behavior accel" data-goto-step="1">↑ 가속</button>
+                            <button type="button" class="behavior brake" data-goto-step="2">↓ 브레이크</button>
+                            <button type="button" class="behavior steer" data-goto-step="3">← → 조향</button>
+                        </div>
+                    </div>
+                    <figure class="code-card">
+                        <figcaption><b>중간 명세 · DSL</b><span class="code-src"><code>games/sunset-drive/spec.mjs</code> 281–290행</span><span class="tag solid">실제 제작 명세 일부</span></figcaption>
+                        <pre class="code" aria-label="SUNSET DRIVE 명세 281–290행"><span class="ln" data-n="281">if_(eq(v('state'), 2), [</span><span class="ln" data-n="282" data-hl="accel">  if_(anyKey(key.up, key.z), [</span><span class="ln" data-n="283" data-hl="accel">    inc('speed', mul(v('dt'), mul(ACC, sub(1.1, mul(g('spd'), 0.7))))), s('throttle', 1),</span><span class="ln" data-n="284">  ], [</span><span class="ln" data-n="285">    if_(anyKey(key.down, key.x), [], [inc('speed', mul(v('dt'), -DECEL))]),</span><span class="ln" data-n="286">  ]),</span><span class="ln" data-n="287" data-hl="brake">  if_(anyKey(key.down, key.x), [inc('speed', mul(v('dt'), -BRAKE)), s('brake', 1)]),</span><span class="ln" data-n="288" data-hl="steer">  s('steer', 0),</span><span class="ln" data-n="289" data-hl="steer">  if_(isPressed(key.left), [inc('px', mul(v('dt'), mul(-2.3, g('spd')))), s('steer', -1)]),</span><span class="ln" data-n="290" data-hl="steer">  if_(isPressed(key.right), [inc('px', mul(v('dt'), mul(2.3, g('spd')))), s('steer', 1)]),</span></pre>
+                        <div class="code-read">
+                            <p data-show="=0">경주 중(state = 2)일 때 키 입력에 따라 속도와 좌우 위치를 바꾸는 부분입니다.</p>
+                            <p data-show="=1"><b class="accel">↑ · Z</b> 누르는 동안 속도(speed)를 올리고, 가속 표시(throttle)를 켭니다.</p>
+                            <p data-show="=2"><b class="brake">↓ · X</b> 누르면 속도를 크게 줄이고, 브레이크 표시(brake)를 켭니다.</p>
+                            <p data-show="=3"><b class="steer">← · →</b> 누르는 동안 좌우 위치(px)를 바꿉니다. 빠를수록 많이 움직입니다.</p>
+                            <p data-show="=4" class="read-all"><span><b class="accel">↑ · Z</b> 속도 올리기</span><span><b class="brake">↓ · X</b> 브레이크</span><span><b class="steer">← · →</b> 좌우 위치 바꾸기</span></p>
+                        </div>
+                    </figure>
+                </div>
+                <p class="foot-note">DSL — 엔트리 블록 명세를 쓰기 쉽게 만든 작성 함수입니다. 이 명세가 검사를 거쳐 엔트리 블록이 됩니다.</p>
+                <aside class="speaker-notes">
+                    <p>첫 단계는 AI가 게임 동작을 중간 명세로 쓰는 일입니다. 엔트리 작품 파일은 블록 데이터와 그림·소리가 겹겹이 묶인 구조라서, AI가 쓰기 쉬운 작성 함수, 즉 DSL을 준비했습니다.</p>
+                    <p>화면은 실제 SUNSET DRIVE 명세의 10줄입니다. (↓) 위쪽 화살표나 Z를 누르면 속도를 올리고, (↓) 아래쪽 화살표나 X는 브레이크, (↓) 좌우 화살표는 좌우 위치를 바꿉니다. 왼쪽 버튼을 눌러 바로 골라 볼 수도 있습니다.</p>
+                    <p>무엇을 어떻게 움직일지는 AI가 정합니다. 이 명세가 다음 단계의 검사를 거쳐 엔트리 블록으로 바뀝니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide check" data-title="② 정적 검사" data-scene="check" data-steps="검사 항목|검사 실행|통과하면|오류가 있으면">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="2"></ol></header>
+                <h2>② 작품 파일을 만들기 전에 명세부터 검사합니다</h2>
+                <div class="check-body">
+                    <div class="doc-col">
+                        <div class="doc">
+                            <p class="doc-head"><b>명세</b><code>spec.mjs</code></p>
+                            <div class="doc-lines" aria-hidden="true"><i style="--w:55%;--c:#ffd28a"></i><i style="--w:72%;--c:#9dc4ff"></i><i style="--w:88%;--c:#9fe3b0"></i><i style="--w:38%;--c:#e6ecf5"></i><i style="--w:80%;--c:#ffd28a"></i><i style="--w:32%;--c:#ffb3a6"></i><i style="--w:84%;--c:#9dc4ff"></i><i style="--w:46%;--c:#e6ecf5"></i><i style="--w:90%;--c:#ffd28a"></i></div>
+                            <span class="scan" data-show="=1" aria-hidden="true"></span>
+                        </div>
+                        <p class="no-run"><span class="no-run-icon" aria-hidden="true">▶</span>생성 전에 · 실행하지 않고 파일만 읽음</p>
+                        <code class="cmd">node tools/make-ent.mjs &lt;spec&gt; --check</code>
+                    </div>
+                    <div class="checks">
+                        <p class="checks-title"><code>validateSpec</code>이 확인하는 것</p>
+                        <ol class="check-list">
+                            <li style="--k:0"><b>블록 종류</b><span>엔트리에 등록된 블록인가 · 블록 목록 474종과 대조</span><i class="mark" data-show="1" aria-label="확인"></i></li>
+                            <li style="--k:1"><b>입력 형식</b><span>입력 칸의 개수와 값의 종류가 맞는가</span><i class="mark" data-show="1" aria-label="확인"></i></li>
+                            <li style="--k:2"><b>변수·함수 참조</b><span>선언된 변수·함수·오브젝트를 가리키는가</span><i class="mark" data-show="1" aria-label="확인"></i></li>
+                        </ol>
+                        <div class="outcomes">
+                            <p class="outcome pass" data-show="2"><b>통과</b>→ ③ 작품 생성으로</p>
+                            <p class="outcome fail" data-show="3"><b>오류</b>→ 위치와 이유를 보고 → AI가 명세 수정</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="foot-note">생성 명령도 같은 검사를 먼저 거쳐, 오류가 남은 명세로는 .ent를 만들지 않습니다. 게임이 의도대로 움직이는지는 ④ 실행·관찰에서 확인합니다.</p>
+                <aside class="speaker-notes">
+                    <p>두 번째는 정적 검사입니다. 중요한 점은 작품 파일을 만들기 전에, 실행하지 않고 명세 파일만 읽어서 검사한다는 것입니다.</p>
+                    <p>(↓) 엔트리에 실제로 있는 블록인지 474종 블록 목록과 대조하고, 입력 칸의 개수와 값의 종류, 선언된 변수·함수·오브젝트를 제대로 가리키는지 확인합니다.</p>
+                    <p>(↓) 통과하면 작품 생성으로 넘어가고, (↓) 오류가 있으면 위치와 이유를 보고해서 AI가 명세를 고칩니다. 생성 명령도 이 검사를 먼저 거치기 때문에 오류가 남은 명세로는 작품 파일을 만들지 않습니다.</p>
+                    <p>다만 게임이 의도대로 움직이는지는 이 단계에서 알 수 없어서, 뒤의 실행·관찰이 필요합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide gen" data-title="③ 작품 생성" data-scene="gen" data-steps="명세 → 생성기|구성 요소로 변환|.ent 작품 파일">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="3"></ol></header>
+                <h2>③ 생성기가 명세를 엔트리 작품 파일로 바꿉니다</h2>
+                <div class="gen-body">
+                    <div class="doc small">
+                        <p class="doc-head"><b>명세</b><code>spec.mjs</code></p>
+                        <div class="doc-lines" aria-hidden="true"><i style="--w:60%;--c:#ffd28a"></i><i style="--w:85%;--c:#9dc4ff"></i><i style="--w:42%;--c:#9fe3b0"></i><i style="--w:78%;--c:#ffd28a"></i><i style="--w:50%;--c:#e6ecf5"></i></div>
+                        <p class="doc-sub">검사 통과</p>
+                    </div>
+                    <span class="gen-arrow" aria-hidden="true"></span>
+                    <div class="gen-node">
+                        <span class="gear" aria-hidden="true"></span>
+                        <b>생성기</b>
+                        <code>make-ent.mjs</code>
+                    </div>
+                    <ul class="parts" data-show="1">
+                        <li style="--k:0;--c:#1eb2e6">블록</li>
+                        <li style="--k:1;--c:#d84fcf">변수</li>
+                        <li style="--k:2;--c:#e8691f">함수</li>
+                        <li style="--k:3;--c:#33a7ff">그림</li>
+                        <li style="--k:4;--c:#6f84ff">소리</li>
+                    </ul>
+                    <div class="ent" data-show="2">
+                        <span class="ent-file" aria-hidden="true">.ent</span>
+                        <b>sunset-drive_002.ent</b>
+                        <span>보관 작품 파일</span>
+                    </div>
+                    <div class="stats" data-show="2">
+                        <p class="stats-title">보관 작품 파일 구성</p>
+                        <dl>
+                            <div><dt>오브젝트</dt><dd>13</dd></div>
+                            <div><dt>블록</dt><dd>3,031</dd></div>
+                            <div><dt>그림</dt><dd>98</dd></div>
+                            <div><dt>소리</dt><dd>8</dd></div>
+                        </dl>
+                        <p class="stats-sub">함수 11 · 변수 57 · 리스트 26</p>
+                    </div>
+                </div>
+                <p class="foot-note">명세를 블록·변수·함수 구조로 바꾸고 그림·소리를 함께 묶어, 엔트리가 여는 .ent 작품 파일을 만듭니다.</p>
+                <aside class="speaker-notes">
+                    <p>세 번째는 작품 생성입니다. 정적 검사를 통과한 명세를 생성기 make-ent가 받습니다.</p>
+                    <p>(↓) 생성기는 명세를 엔트리의 블록·변수·함수 구조로 바꾸고, 그림과 소리를 함께 묶습니다.</p>
+                    <p>(↓) 그 결과가 .ent 작품 파일입니다. 보관 중인 SUNSET DRIVE 파일은 오브젝트 13개, 블록 3,031개, 그림 98개, 소리 8개로 이루어져 있습니다. 이 숫자는 보관 파일의 구조 기록입니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide obs" data-title="④ 실행·관찰" data-scene="obs" data-steps="작품 불러오기|그대로 2초|키 입력|관찰 보고">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="4"></ol></header>
+                <h2>④ 실제로 실행하고, 무엇이 바뀌는지 기록합니다</h2>
+                <div class="obs-body">
+                    <div class="keys-col">
+                        <p class="col-title">키 입력</p>
+                        <div class="keys">
+                            <kbd class="key up" style="--k:1">↑</kbd>
+                            <kbd class="key left" style="--k:0">←</kbd>
+                            <kbd class="key down" style="--k:3">↓</kbd>
+                            <kbd class="key right" style="--k:2">→</kbd>
+                        </div>
+                        <p class="col-note">keydown · keyup 이벤트만 보냄</p>
+                        <p class="key-rule" data-show="2">키마다 0.6초씩 누르기</p>
+                    </div>
+                    <div class="engine">
+                        <p class="engine-head"><b>로컬 편집기 · 엔트리 엔진</b><span>헤드리스 실행</span></p>
+                        <div class="stage-box" role="img" aria-label="실행 화면을 나타낸 도식">
+                            <span class="obj a" aria-hidden="true"></span>
+                            <span class="trail" data-show="1" aria-hidden="true"></span>
+                            <span class="obj b" aria-hidden="true"></span>
+                            <span class="snap" data-show="3" aria-hidden="true"></span>
+                            <span class="stage-label">실행 화면(도식)</span>
+                        </div>
+                        <ol class="boot">
+                            <li>준비 신호 확인</li>
+                            <li>작품 불러오기</li>
+                            <li>▶ 실행</li>
+                        </ol>
+                    </div>
+                    <div class="log-col">
+                        <p class="col-title">관찰 기록 <code>play-check</code></p>
+                        <ul class="obs-log">
+                            <li><b>불러오기</b><span>준비 신호를 확인하고 작품을 불러와 실행</span></li>
+                            <li data-show="1"><b>그대로 2초</b><span>오브젝트별 움직임 · 바뀐 변수·글자·모양</span></li>
+                            <li data-show="2"><b>키마다 0.6초</b><span>누르지 않은 실행과 비교해 달라진 점</span></li>
+                            <li data-show="3"><b>화면 점검</b><span>가려져 안 그려지는 오브젝트 · 무대 밖 글상자</span></li>
+                            <li data-show="3"><b>화면 캡처</b><span>무대 화면 한 장을 함께 남김</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="foot-note">변화를 기록해 보고할 뿐, 게임 규칙이 맞는지는 판정하지 않습니다. 판정은 ⑤ 작품별 검사가 맡습니다.</p>
+                <aside class="speaker-notes">
+                    <p>네 번째는 실제로 실행해 보는 단계입니다. 하네스가 로컬 편집기에 작품을 불러와 실행합니다. 화면을 띄우지 않는 헤드리스 브라우저를 씁니다.</p>
+                    <p>(↓) 먼저 아무 키도 누르지 않고 2초 동안 오브젝트가 어떻게 움직이고 어떤 변수가 바뀌는지 기록합니다.</p>
+                    <p>(↓) 다음으로 첫 장면이 반응하는 키를 하나씩 0.6초 동안 눌러서, 누르지 않았을 때와 무엇이 달라지는지 비교합니다.</p>
+                    <p>(↓) 다른 그림에 가려 안 보이는 오브젝트나 무대 밖으로 나간 글상자, 화면 캡처까지 보고서로 남깁니다. 여기서는 변화를 기록할 뿐, 게임 규칙이 맞는지는 판정하지 않습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide ver" data-title="⑤ 작품별 검사" data-scene="verify" data-steps="기대값|기록과 비교|보관 기록 집계">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="5"></ol></header>
+                <h2>⑤ 게임마다 지켜야 할 동작을 기대값과 비교합니다</h2>
+                <div class="ver-body">
+                    <div class="rules">
+                        <p class="panel-head"><b>작품별 규칙 검사</b><code>games/sunset-drive/verify.mjs</code></p>
+                        <table>
+                            <thead><tr><th scope="col">확인할 동작</th><th scope="col">기대</th><th scope="col">보관 기록</th><th scope="col"><span class="sr-only">결과</span></th></tr></thead>
+                            <tbody>
+                                <tr style="--k:0"><th scope="row">↑ 3초 누르기</th><td>180 km/h 이상</td><td><span class="got" data-show="1">198 km/h</span></td><td><i class="ok" data-show="1" aria-label="통과"></i></td></tr>
+                                <tr style="--k:1"><th scope="row">←, → 차례로 누르기</th><td>왼쪽·오른쪽으로 이동</td><td><span class="got" data-show="1">px +0.01 → −0.65 → +0.27</span></td><td><i class="ok" data-show="1" aria-label="통과"></i></td></tr>
+                                <tr style="--k:2"><th scope="row">3바퀴 주행</th><td>결승 뒤 결과판</td><td><span class="got" data-show="1">랩 38.9 · 36.0 · 36.0초, 결과판 표시</span></td><td><i class="ok" data-show="1" aria-label="통과"></i></td></tr>
+                                <tr style="--k:3"><th scope="row">저장 후 다시 열기</th><td>그림·소리·블록 유지</td><td><span class="got" data-show="1">그림 98 · 소리 8 · 블록 3,031</span></td><td><i class="ok" data-show="1" aria-label="통과"></i></td></tr>
+                            </tbody>
+                        </table>
+                        <p class="compare-note">기대값과 실제값을 비교해 통과·실패를 집계합니다.</p>
+                    </div>
+                    <div class="tally" data-show="2">
+                        <p class="panel-head"><b>보관 검사 기록</b><span class="tag">2026-09-23</span></p>
+                        <p class="big"><b>66 / 66</b><span>항목 통과</span></p>
+                        <dl>
+                            <div><dt>시작·구조</dt><dd>11</dd></div>
+                            <div><dt>입력·조작</dt><dd>16</dd></div>
+                            <div><dt>소리</dt><dd>15</dd></div>
+                            <div><dt>레이스 진행</dt><dd>17</dd></div>
+                            <div><dt>저장 후 다시 열기</dt><dd>7</dd></div>
+                        </dl>
+                        <p class="tally-src">sunset-drive_002.ent · 로컬 Entry 4.0.20 · 헤드리스 Chromium</p>
+                        <p class="tally-warn">당시 보관 기록입니다. 이 발표 자료를 만들며 새로 실행한 검사가 아닙니다.</p>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p>다섯 번째는 게임마다 따로 만든 규칙 검사입니다. 레이싱 게임이라면 위쪽 화살표를 3초 누르면 시속 180킬로미터 이상이 되어야 한다는 식으로 기대값을 정해 둡니다.</p>
+                    <p>(↓) 그리고 실제 값과 비교합니다. 보관 기록에서는 198킬로미터였습니다. 좌우 이동, 3바퀴 완주와 결과판, 저장했다가 다시 열어도 그림·소리·블록이 그대로인지도 확인했습니다.</p>
+                    <p>(↓) 2026년 9월 23일 보관 기록에서는 66개 항목이 모두 통과했습니다. 로컬 엔트리 4.0.20과 헤드리스 크로미움에서 그 파일 하나를 검사한 기록이고, 이 발표 자료를 만들면서 새로 검사한 것은 아닙니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide step-slide fb" data-title="⑥ 피드백" data-scene="feedback" data-steps="문제 발견|AI가 원인 판단|명세 수정|다시 ②~⑤|다시 확인">
+                <header class="step-head"><p class="eyebrow">03 · 제작 과정</p><ol class="rail" data-rail="6"></ol></header>
+                <h2>⑥ AI가 결과를 읽고 고친 뒤, 다시 확인합니다</h2>
+                <p class="real-tag"><span class="tag dashed">실제 제작 기록의 예 · 2026-09-23</span></p>
+                <div class="loop">
+                    <svg class="loop-svg" viewBox="0 0 898 330" aria-hidden="true" focusable="false">
+                        <defs>
+                            <marker id="fb-head-0" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5c6f90"/></marker>
+                            <marker id="fb-head-1" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5ee1f5"/></marker>
+                            <marker id="fb-head-2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cdbdff"/></marker>
+                            <marker id="fb-head-3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ffb547"/></marker>
+                            <marker id="fb-head-4" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#3ddc97"/></marker>
+                        </defs>
+                        <g class="arc-base">
+                            <path d="M150 100 C150 54, 226 40, 304 40" marker-end="url(#fb-head-0)"/>
+                            <path d="M594 40 C672 40, 748 54, 748 100" marker-end="url(#fb-head-0)"/>
+                            <path d="M748 226 C748 272, 694 290, 640 290" marker-end="url(#fb-head-0)"/>
+                            <path d="M258 290 C204 290, 150 272, 150 226" marker-end="url(#fb-head-0)"/>
+                        </g>
+                        <path class="arc a1" data-show="1" d="M150 100 C150 54, 226 40, 304 40" marker-end="url(#fb-head-1)"/>
+                        <path class="arc a2" data-show="2" d="M594 40 C672 40, 748 54, 748 100" marker-end="url(#fb-head-2)"/>
+                        <path class="arc a3" data-show="3" d="M748 226 C748 272, 694 290, 640 290" marker-end="url(#fb-head-3)"/>
+                        <path class="arc a4" data-show="4" d="M258 290 C204 290, 150 272, 150 226" marker-end="url(#fb-head-4)"/>
+                    </svg>
+                    <span class="arc-label l1">오류·상태</span>
+                    <span class="arc-label l2">수정</span>
+                    <span class="arc-label l3">다시 생성</span>
+                    <span class="arc-label l4">다시 확인</span>
+                    <div class="node result">
+                        <b>실행 결과</b>
+                        <p class="bad">✗ 계기판 숫자 ‘0’이 크게 표시됨</p>
+                        <p class="good" data-show="4">✓ 정상 표시 · 3바퀴 주행으로 다시 확인</p>
+                    </div>
+                    <div class="node agent">
+                        <b><span class="ai-mark" aria-hidden="true">AI</span>AI 에이전트</b>
+                        <p>오류·상태를 읽고 판단</p>
+                        <p class="cause" data-show="1">원인: 모양을 바꾸기 전에 크기 정하기가 실행됨</p>
+                    </div>
+                    <div class="node fix">
+                        <b>명세 수정 <span>AI가 수정</span></b>
+                        <p data-show="2">크기 정하기 순서를 고침</p>
+                        <p data-show="2">제목 화면 글자 배치도 정리</p>
+                    </div>
+                    <div class="node rerun">
+                        <b>다시 실행</b>
+                        <span class="pill" style="--k:0">② 검사</span><span class="pill" style="--k:1">③ 생성</span><span class="pill" style="--k:2">④ 관찰</span><span class="pill" style="--k:3">⑤ 검사</span>
+                    </div>
+                    <p class="loop-center">피드백</p>
+                </div>
+                <aside class="speaker-notes">
+                    <p>마지막 단계는 피드백입니다. 실제 제작 기록의 한 장면입니다. 실행해 보니 계기판 숫자 0이 크게 표시되는 문제가 있었습니다.</p>
+                    <p>(↓) AI 에이전트가 실행 결과를 읽고 원인을 찾았습니다. 모양을 바꾸기 전에 크기를 정하는 블록이 먼저 실행되고 있었습니다.</p>
+                    <p>(↓) AI가 명세에서 그 순서를 고치고, 제목 화면 글자 배치도 정리했습니다. (↓) 고친 명세는 다시 검사·생성·관찰·검사를 거칩니다.</p>
+                    <p>(↓) 3바퀴를 다시 달려 보며 정상 표시를 확인했습니다. 판단과 수정은 AI가, 확인은 도구가 하면서 같은 순서를 반복합니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide log" data-title="실제 제작 기록" data-scene="log" data-steps="준비|명세·정적 검사|빌드·실행|문제 발견·수정|다시 확인|검사 통과·문서">
+                <header class="step-head"><p class="eyebrow">04 · 실제 기록</p><ol class="rail" data-rail="0" data-rail-follow></ol></header>
+                <h2>실제 제작 기록에서도 같은 순서가 반복됐습니다</h2>
+                <ol class="log-list">
+                    <li data-show="0" data-rail-hit="">
+                        <span class="log-badge base">준비</span>
+                        <b>지식 문서와 기존 도구부터 확인</b>
+                        <span class="log-detail">작업 공간의 지식 문서와 .ent 제작 도구를 먼저 읽음</span>
+                        <span class="who"><i class="ai">AI</i></span>
+                    </li>
+                    <li data-show="1" data-rail-hit="1 2">
+                        <span class="log-badge">①·②</span>
+                        <b>명세 작성 → 정적 검사 통과</b>
+                        <span class="log-detail">검토에서 찾은 문제 몇 가지를 첫 빌드 전에 먼저 고침</span>
+                        <span class="who"><i class="ai">AI</i><i class="tool">도구</i></span>
+                    </li>
+                    <li data-show="2" data-rail-hit="3 4">
+                        <span class="log-badge">③·④</span>
+                        <b>빌드 후 헤드리스로 실행</b>
+                        <span class="log-detail">키 입력 봇으로 타이틀·카운트다운·주행 · 62 fps, 오류 0</span>
+                        <span class="who"><i class="tool">도구</i></span>
+                    </li>
+                    <li data-show="3" data-rail-hit="4 6">
+                        <span class="log-badge ai">④→⑥</span>
+                        <b>캡처 화면에서 버그 2개 발견</b>
+                        <span class="log-detail">계기판 숫자 ‘0’이 크게 표시 · 제목 글자 겹침 → 고쳐서 다시 빌드</span>
+                        <span class="who"><i class="ai">AI</i></span>
+                    </li>
+                    <li data-show="4" data-rail-hit="4">
+                        <span class="log-badge">④</span>
+                        <b>3바퀴 주행으로 다시 확인</b>
+                        <span class="log-detail">랩 계산 · 결승 · 결과 화면까지 오류 없이 완주</span>
+                        <span class="who"><i class="tool">도구</i></span>
+                    </li>
+                    <li data-show="5" data-rail-hit="5">
+                        <span class="log-badge pass">⑤ 완료</span>
+                        <b>검사 통과 확인 → 문서 작성</b>
+                        <span class="log-detail">README와 지식 문서에 확인한 내용을 남겨 다음 작업에 재사용</span>
+                        <span class="who"><i class="tool">도구</i><i class="ai">AI</i></span>
+                    </li>
+                </ol>
+                <p class="log-src">2026-09-23 제작 작업 기록(영어)을 우리말로 요약했습니다. 중간의 소리 검사와 세부 다듬기는 생략했습니다.</p>
+                <aside class="speaker-notes">
+                    <p>앞에서 본 순서가 실제 제작에서도 일어났는지, 2026년 9월 23일 작업 기록을 우리말로 요약했습니다. 위쪽 단계 표시가 각 기록이 6단계 중 어디에 해당하는지 보여 줍니다.</p>
+                    <p>(↓를 누르며) AI는 먼저 지식 문서와 기존 도구를 확인했고, 명세를 쓴 뒤 정적 검사를 통과했습니다. 빌드해서 헤드리스로 실행하고 키 입력 봇으로 플레이해 보니 62프레임, 오류 0이었습니다.</p>
+                    <p>하지만 캡처 화면에서 버그 두 개를 찾았고, 고쳐서 다시 빌드했습니다. 3바퀴 주행으로 다시 확인하고, 마지막에 검사 통과를 확인한 뒤 문서를 남겼습니다. 중간의 소리 검사와 세부 다듬기는 생략했습니다.</p>
+                </aside>
+            </section>
+
+            <section class="slide summary" data-title="정리">
+                <p class="eyebrow">05 · 정리</p>
+                <h2>판단은 AI가, 확인은 하네스의 도구가 맡습니다</h2>
+                <ol class="takeaways">
+                    <li class="tool"><span class="k">1</span><h3>기존 도구를 잇는 하네스</h3><p>AI 에이전트와 엔트리 엔진은 기존 도구를 쓰고, 그 사이의 지식·명세·생성·실행·검사 도구를 만들었습니다.</p></li>
+                    <li class="tool"><span class="k">2</span><h3>만들기 전에 검사, 만든 뒤에 실행</h3><p>명세 작성 → 정적 검사 → 작품 생성 → 실행·관찰 → 작품별 검사 → 피드백</p></li>
+                    <li class="ai"><span class="k">3</span><h3>고치고 다시 확인</h3><p>AI가 오류와 상태 보고를 읽고 명세를 고친 뒤 다시 검사합니다. 실제 제작 기록에서도 이 반복이 있었습니다.</p></li>
+                </ol>
+                <div class="limits">
+                    <p>자동 검사는 정해 둔 항목을 확인합니다. 모든 게임의 완성이나 성공을 보장하지는 않습니다.</p>
+                    <p>하네스 구현과 검사에도 AI 코딩 도우미를 활용했습니다.</p>
+                </div>
+                <div class="credits">
+                    <div class="team">
+                        <p><span>팀</span>엔트리 블럭코딩을 위한 하네스제작</p>
+                        <p>경희대학교 소프트웨어융합학과 · 이영호 (1인 팀)</p>
+                    </div>
+                    <div class="action-row">
+                        <a class="button primary" href="https://github.com/205sla/entry-vibe-coding" target="_blank" rel="noopener">하네스 소스 코드 · GitHub <span aria-hidden="true">↗</span></a>
+                        <a class="button" href="../">자료실로 돌아가기</a>
+                    </div>
+                </div>
+                <aside class="speaker-notes">
+                    <p>정리하겠습니다. 첫째, AI 에이전트와 엔트리 엔진은 기존 도구이고, 저는 그 둘을 잇는 하네스를 만들었습니다.</p>
+                    <p>둘째, 작품을 만들기 전에 정적 검사를 하고, 만든 뒤에는 실제로 실행해 관찰하고 작품별 규칙으로 검사합니다. 셋째, AI는 그 결과를 읽고 고친 뒤 다시 확인합니다.</p>
+                    <p>자동 검사는 정해 둔 항목을 확인하는 것이라 모든 게임의 성공을 보장하지는 않습니다. 하네스를 만들고 검사하는 과정에도 AI 코딩 도우미를 활용했습니다. 소스 코드는 GitHub에서 볼 수 있습니다. 감사합니다.</p>
+                </aside>
+            </section>
+
+        </div>
+    </main>
+    <nav class="deck-controls" aria-label="슬라이드 이동">
+        <button type="button" data-deck-previous title="이전 슬라이드 (←)">←</button>
+        <span class="deck-count" data-deck-count aria-live="polite"></span>
+        <button type="button" data-deck-next title="다음 슬라이드 (→)">→</button>
+    </nav>
+    <div class="deck-progress-track" aria-hidden="true"><div class="deck-progress" data-deck-progress></div></div>
+    <aside class="notes-panel" data-deck-notes aria-label="발표자 노트"></aside>
+</body>
+</html>
