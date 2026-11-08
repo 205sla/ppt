@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // 엔트리 하네스 웹 발표 전용 검사.
-// 발표자가 직접 넘기는 자료인지(자동 전환·타이머 없음), 장면 단계가 슬라이드 이동과 섞이지 않고
+// 장면은 자동 재생되고 페이지는 발표자가 직접 넘기는지,
 // 되돌아가기·다시 재생이 예측 가능한지, 다룰 범위와 사실 표시, 화면 크기별 배치, 움직임 줄이기, 인쇄 상태를 확인합니다.
 const here = path.dirname(fileURLToPath(import.meta.url));
 const glyphs = new Set(JSON.parse(fs.readFileSync(path.join(here, 'font-glyphs.json'), 'utf8')).chars);
@@ -16,18 +16,9 @@ export default async function verify({ page, baseUrl, deck }) {
     const p = await page.context().browser().newPage({ viewport: { width: 1920, height: 1080 } });
     const errors = [];
     p.on('pageerror', (error) => errors.push(error.message));
-    // 자료 스크립트(공통·전용 deck.js)가 타이머나 rAF를 쓰는지 셉니다. 자동 진행이 없어야 합니다.
-    await p.addInitScript(() => {
-        const counts = { timeout: 0, interval: 0, raf: 0 };
-        window.__deckTimers = counts;
-        for (const [name, key] of [['setTimeout', 'timeout'], ['setInterval', 'interval'], ['requestAnimationFrame', 'raf']]) {
-            const original = window[name];
-            window[name] = function (...args) {
-                if (/\/(EntryHarnessFlow|shared)\/deck\.js/.test(new Error().stack || '')) counts[key] += 1;
-                return original.apply(this, args);
-            };
-        }
-    });
+    // 시간을 가상으로 진행해 자동 재생·취소를 검증하고 배치 검사는 같은 단계에 고정합니다.
+    await p.clock.install({ time: new Date('2026-11-08T00:00:00Z') });
+    await p.clock.pauseAt(new Date('2026-11-08T00:00:01Z'));
     try {
         await p.goto(`${baseUrl}/${deck.slug}/`, { waitUntil: 'networkidle' });
         await p.waitForFunction(() => window.entryHarnessFlow && window.ppt205Deck);
@@ -87,28 +78,20 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.keyboard.press('ArrowLeft');
         assert.equal(await current(), 0, '첫 장에서 이전 버튼이 비활성이 된 뒤에도 방향키');
 
-        // 장면 단계(단계 버튼·↓ ↑ 키)와 이동 버튼을 섞어 쓰기, 뒤로 돌아오기·다시 들어오기
-        await p.locator('[data-deck-next]').click();
-        assert.equal(await current(), 1);
-        assert.equal(await step('request'), 0, '이동 버튼으로 앞에서 들어오면 0단계');
-        await p.keyboard.press('ArrowDown');
-        assert.equal(await step('request'), 1, '이동 버튼에 포커스가 있어도 ↓ 키는 장면 단계');
-        await p.locator('.slide.is-active [data-step-next]').click();
-        assert.equal(await step('request'), 2);
-        assert.equal(await current(), 1, '단계 조작 중 슬라이드 유지');
-        await p.keyboard.press('ArrowRight');
-        assert.equal(await current(), 2, '단계 버튼 클릭 뒤 → 키');
-        await p.locator('[data-deck-previous]').click();
-        assert.equal(await current(), 1);
-        assert.equal(await step('request'), 2, '이전 버튼으로 뒤에서 돌아오면 완성 단계');
-        await p.keyboard.press('ArrowUp');
-        assert.equal(await step('request'), 1, '이전 버튼 포커스 상태에서 ↑ 키');
-        await p.keyboard.press('ArrowLeft');
-        await p.keyboard.press('ArrowRight');
-        assert.equal(await current(), 1);
-        assert.equal(await step('request'), 0, '앞에서 다시 들어오면 0단계');
+        // 방향키 네 개와 스페이스는 포커스 위치와 관계없이 한 장씩 이동합니다.
+        for (const focus of ['body', '[data-deck-next]', '[data-deck-previous]', '.deck-download', '.slide.is-active [data-step-next]', '.slide.is-active [data-step-replay]']) {
+            for (const [key, delta] of [['ArrowRight', 1], ['ArrowDown', 1], ['Space', 1], ['ArrowLeft', -1], ['ArrowUp', -1], ['Shift+Space', -1]]) {
+                await go(2);
+                if (focus === 'body') await p.evaluate(() => document.activeElement?.blur());
+                else await p.locator(focus).focus();
+                await p.keyboard.press(key);
+                assert.equal(await current(), 2 + delta, `${focus}: ${key}는 한 장 이동`);
+                const entered = scenes.find((item) => item.index === 2 + delta);
+                assert.equal(await step(entered.name), 0, '이전·다음 장 모두 처음부터 재생');
+            }
+        }
 
-        // 키보드만 쓰는 경우: Tab으로 버튼에 가고, Enter·스페이스는 버튼 기본 동작(한 번만 이동), 방향키·N도 작동
+        // Tab·Enter는 버튼 조작을 유지합니다. 스페이스는 단계 버튼에서도 다음 페이지입니다.
         await go(0);
         await p.evaluate(() => document.activeElement?.blur());
         for (let tabs = 0; tabs < 20 && await focused() !== 'next'; tabs += 1) await p.keyboard.press('Tab');
@@ -116,30 +99,34 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.keyboard.press('Enter');
         assert.equal(await current(), 1, 'Enter로 한 장');
         await p.keyboard.press('Space');
-        assert.equal(await current(), 2, '스페이스로 한 장(두 번 넘어가지 않음)');
-        await p.keyboard.press('ArrowRight');
-        assert.equal(await current(), 3, '키보드 포커스 상태에서 → 키');
-        assert.equal(await focused(), 'next', '키보드 포커스 유지');
-        await p.keyboard.press('KeyN');
-        assert.equal(await notesShown(), true, '키보드 포커스 상태에서 N 키');
-        await p.keyboard.press('KeyN');
+        assert.equal(await current(), 2, '스페이스로 한 장');
         await p.keyboard.press('Shift+Tab');
-        assert.equal(await focused(), 'previous', 'Shift+Tab은 가로채지 않음');
+        assert.equal(await focused(), 'previous', 'Shift+Tab 유지');
         await p.keyboard.press('Enter');
-        assert.equal(await current(), 2, '이전 버튼 Enter');
-        assert.equal(await step('roles'), 2, '이전 버튼으로 뒤에서 돌아오면 완성 단계');
+        assert.equal(await current(), 1, '이전 버튼 Enter');
+        await p.locator('.slide.is-active [data-step-next]').focus();
+        await p.keyboard.press('Enter');
+        assert.equal(await step('request'), 1, '단계 버튼 Enter');
+        assert.equal(await current(), 1, '단계 버튼은 현재 페이지 유지');
         await p.locator('.slide.is-active [data-step-replay]').focus();
         await p.keyboard.press('Enter');
-        assert.equal(await step('roles'), 0, '다시 재생 버튼 Enter');
-        await p.locator('.slide.is-active [data-step-next]').focus();
+        assert.equal(await step('request'), 0, '다시 재생 Enter');
         await p.keyboard.press('Space');
-        assert.equal(await step('roles'), 1, '단계 버튼 스페이스는 단계만');
-        assert.equal(await current(), 2, '단계 버튼 스페이스로 슬라이드가 넘어가지 않음');
-        await p.keyboard.press('Enter');
-        assert.equal(await step('roles'), 2, '단계 버튼 Enter');
-        await p.keyboard.press('ArrowRight');
-        assert.equal(await current(), 3, '단계 버튼 포커스 상태에서 → 키');
+        assert.equal(await current(), 2, '다시 재생 버튼에 포커스가 있어도 스페이스는 다음 장');
+        // 편집 가능한 요소와 수정 키 조합은 슬라이드 키로 가로채지 않습니다.
+        await p.evaluate(() => {
+            const edit = document.createElement('div');
+            edit.id = 'qa-edit'; edit.contentEditable = 'true'; edit.innerHTML = '<span>입력</span>';
+            document.body.append(edit); edit.focus();
+        });
+        await p.keyboard.press('Space');
+        await p.keyboard.press('ArrowDown');
+        assert.equal(await current(), 2, '편집 중 페이지 유지');
+        await p.evaluate(() => document.querySelector('#qa-edit').remove());
+        await p.keyboard.press('Control+ArrowRight');
+        assert.equal(await current(), 2, '수정 키 조합은 페이지 유지');
         // 링크(PDF·정리 장)에 포커스가 남아도 방향키 작동
+        await go(3);
         await p.locator('.deck-download').focus();
         await p.keyboard.press('ArrowLeft');
         assert.equal(await current(), 2, 'PDF 버튼 포커스 상태에서 ← 키');
@@ -173,16 +160,50 @@ export default async function verify({ page, baseUrl, deck }) {
             assert.ok(!/TODO|FIXME|placeholder|deck\.js|qa\.mjs|data-|세션|프롬프트|위임/i.test(paras.join(' ')), `${index + 1}쪽 노트에 제작용 문구`);
         });
 
-        // ── 자동 진행 없음: 그대로 두어도 슬라이드·단계가 바뀌지 않습니다. ──
-        await p.evaluate(() => { window.__deckTimers.timeout = 0; window.__deckTimers.interval = 0; window.__deckTimers.raf = 0; });
+        // ── 각 장에 들어오면 순서대로 자동 재생, 완성 장면에서 유지(페이지 자동 이동 없음) ──
         await go(0);
-        await p.waitForTimeout(3000);
+        await p.clock.fastForward(60000);
         assert.equal(await current(), 0, '표지에서 자동 전환 없음');
+        for (const item of scenes) {
+            await enterForward(item.name);
+            assert.equal(await step(item.name), 0, `${item.name}: 처음부터 자동 재생`);
+            for (let k = 1; k < item.steps; k += 1) {
+                await p.clock.fastForward(4000);
+                assert.equal(await step(item.name), k, `${item.name}: 자동 ${k + 1}단계`);
+            }
+            await p.clock.fastForward(60000);
+            assert.equal(await current(), item.index, `${item.name}: 페이지 자동 이동 없음`);
+            assert.equal(await step(item.name), item.steps - 1, `${item.name}: 마지막 장면 유지`);
+        }
+        // 중간에 떠나거나 다시 들어와도 이전 예약이 뒤늦게 단계를 넘기지 않습니다.
+        await enterForward('overview');
+        await p.clock.fastForward(3000);
+        await go(2);
+        await go(3);
+        await p.clock.fastForward(1000);
+        assert.equal(await step('overview'), 0, '이전 예약 취소');
+        await p.clock.fastForward(3000);
+        assert.equal(await step('overview'), 1, '재진입 기준으로 한 번 진행');
+        await go(0);
+        await p.clock.fastForward(20000);
+        assert.equal(await step('overview'), 1, '떠난 페이지의 단계 유지');
         await enterForward('request');
-        await p.waitForTimeout(3000);
-        assert.equal(await current(), scene('request').index, '요청 장에서 자동 전환 없음');
-        assert.equal(await step('request'), 0, '장면 단계 자동 진행 없음');
-        assert.equal(await p.evaluate(() => [...document.querySelectorAll('.slide.is-active .typed .ch')].every((ch) => getComputedStyle(ch).opacity === '1')), true, '타자 효과는 CSS로 끝까지 표시');
+        await p.clock.fastForward(3000);
+        await p.locator('.slide.is-active [data-step-next]').click();
+        await p.clock.fastForward(1000);
+        assert.equal(await step('request'), 1, '수동 단계 선택부터 새 간격 시작');
+        await p.clock.fastForward(3000);
+        assert.equal(await step('request'), 2, '수동 선택 뒤 자동 재생 재개');
+        await p.locator('.slide.is-active [data-step-replay]').click();
+        await p.clock.fastForward(4000);
+        assert.equal(await step('request'), 1, '다시 재생 뒤 자동 진행');
+        // 탭이 숨겨진 동안 멈추고 다시 보이면 현재 단계부터 이어갑니다.
+        await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
+        await p.clock.fastForward(20000);
+        assert.equal(await step('request'), 1, '숨긴 탭에서는 정지');
+        await p.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+        await p.clock.fastForward(4000);
+        assert.equal(await step('request'), 2, '돌아온 탭에서 이어 재생');
 
         // ── 숨겨진 장의 움직임 정리 ──
         await enterForward('roles');
@@ -237,7 +258,7 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.keyboard.press('KeyN');
         assert.equal(await p.evaluate(() => document.body.classList.contains('show-notes')), false);
 
-        // ── 장면 단계: 단계 버튼과 ↓ ↑ 키는 슬라이드를 넘기지 않습니다. ──
+        // ── 단계 버튼: 자동 재생 중에도 특정 단계를 직접 선택할 수 있습니다. ──
         for (const item of scenes) {
             await enterForward(item.name);
             assert.equal(await step(item.name), 0, `${item.name}: 앞에서 들어오면 0단계`);
@@ -249,19 +270,15 @@ export default async function verify({ page, baseUrl, deck }) {
                 assert.equal(await status(), `${k + 1} / ${item.steps}\n${item.labels[k]}`);
             }
             assert.equal(await p.locator('.slide.is-active [data-step-next]').isDisabled(), true, `${item.name}: 마지막 단계에서 다음 버튼 비활성`);
+            await p.locator('.slide.is-active [data-step-prev]').click();
+            assert.equal(await step(item.name), item.steps - 2, `${item.name}: 이전 단계 버튼`);
+            assert.equal(await current(), item.index, `${item.name}: 단계 버튼은 페이지 유지`);
+            assert.notEqual(await p.evaluate(() => document.activeElement?.tagName), 'BUTTON', '클릭 뒤 포커스 해제');
             await p.keyboard.press('ArrowDown');
-            assert.equal(await step(item.name), item.steps - 1, `${item.name}: 마지막 단계 유지`);
+            assert.equal(await current(), item.index + 1, `${item.name}: ↓는 다음 장`);
             await p.keyboard.press('ArrowUp');
-            assert.equal(await step(item.name), item.steps - 2, `${item.name}: ↑ 키로 이전 단계`);
-            assert.equal(await current(), item.index, `${item.name}: 단계 조작 중 슬라이드 유지`);
-            await p.keyboard.press('ArrowDown');
-            // 마우스로 누른 단계 버튼이 포커스를 잡지 않아 → 키가 바로 다음 장으로 넘어갑니다.
-            assert.notEqual(await p.evaluate(() => document.activeElement?.tagName), 'BUTTON', `${item.name}: 버튼 클릭 뒤 포커스 해제`);
-            await p.keyboard.press('ArrowRight');
-            assert.equal(await current(), item.index + 1, `${item.name}: 단계 조작 뒤 → 키로 다음 장`);
-            await p.keyboard.press('ArrowLeft');
-            assert.equal(await current(), item.index);
-            assert.equal(await step(item.name), item.steps - 1, `${item.name}: 뒤에서 돌아오면 완성 단계`);
+            assert.equal(await current(), item.index, `${item.name}: ↑는 이전 장`);
+            assert.equal(await step(item.name), 0, `${item.name}: 돌아오면 처음부터`);
         }
         // 키보드 사용자는 단계 버튼에 포커스를 유지한 채 Enter로 넘길 수 있습니다.
         await enterForward('roles');
@@ -270,7 +287,7 @@ export default async function verify({ page, baseUrl, deck }) {
         assert.equal(await step('roles'), 1);
         assert.equal(await p.evaluate(() => document.activeElement?.hasAttribute('data-step-next')), true, '키보드로 누른 버튼은 포커스 유지');
         await p.keyboard.press('ArrowDown');
-        assert.equal(await step('roles'), 2, '포커스가 버튼에 있어도 ↓ 키로 단계 이동');
+        assert.equal(await current(), 3, '포커스가 버튼에 있어도 ↓ 키로 다음 페이지');
         await p.evaluate(() => document.activeElement?.blur());
 
         // ── 단계가 보여 주는 내용 ──
@@ -361,21 +378,24 @@ export default async function verify({ page, baseUrl, deck }) {
         await enterForward('request');
         await p.waitForTimeout(150);
         assert.equal(await p.evaluate(() => [...document.querySelectorAll('.slide.is-active .typed .ch')].every((ch) => getComputedStyle(ch).opacity === '1')), true, '움직임 줄이기: 타자 효과 없이 바로 표시');
-        await p.locator('.slide.is-active [data-step-next]').click();
-        await p.locator('.slide.is-active [data-step-next]').click();
-        await p.waitForTimeout(150);
-        assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.slide.is-active .real-req')).opacity), '1', '움직임 줄이기: 단계가 바로 바뀜');
+        assert.equal(await step('request'), 2, '움직임 줄이기: 완성 장면 바로 표시');
+        assert.equal(await shown('.real-req'), true);
         await enterForward('roles');
-        await p.locator('.slide.is-active [data-step-next]').click();
-        await p.waitForTimeout(150);
+        assert.equal(await step('roles'), 2);
+        await p.clock.fastForward(20000);
+        assert.equal(await current(), 2);
+        await p.waitForTimeout(150); // 브라우저가 축소된 CSS 전환을 완료하도록 렌더링 시간을 둡니다.
         assert.deepEqual(await p.evaluate(() => document.querySelector('.slide.is-active').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').map((a) => a.effect.target.className)), [], '움직임 줄이기: 반복 애니메이션 없음');
         await p.emulateMedia({ reducedMotion: 'no-preference' });
 
         // ── 인쇄(PDF): 모든 장면을 완성 단계로, 반복 호출해도 같고, 끝나면 원래 단계로 ──
+        await enterForward('request');
         await p.evaluate(() => { window.entryHarnessFlow.setStep('request', 1); window.entryHarnessFlow.setStep('overview', 3); });
         const before = (await state()).steps;
         await p.evaluate(() => window.ppt205Deck.preparePrint());
         const once = await state();
+        await p.clock.fastForward(20000);
+        assert.deepEqual(await state(), once, '인쇄 중 자동 재생 정지');
         await p.evaluate(() => window.ppt205Deck.preparePrint());
         assert.deepEqual(await state(), once, '인쇄 준비 반복 안정성');
         for (const item of scenes) assert.equal(once.steps[item.name], item.steps - 1, `${item.name}: 인쇄는 완성 단계`);
@@ -385,6 +405,8 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.evaluate(() => dispatchEvent(new Event('afterprint')));
         assert.deepEqual((await state()).steps, before, '인쇄 뒤 원래 단계로 복귀');
         assert.equal((await state()).printing, false);
+        await p.clock.fastForward(4000);
+        assert.equal(await step('request'), 2, '인쇄 후 현재 단계부터 자동 재생 재개');
 
         // ── 글꼴: 화면 글자가 모두 포함된 자체 글꼴로 표시 ──
         const text = await p.evaluate(() => document.querySelector('.deck-stage').textContent + document.querySelector('.deck-controls').textContent);
@@ -392,11 +414,9 @@ export default async function verify({ page, baseUrl, deck }) {
         assert.deepEqual(missing, [], '글꼴에 없는 글자 (python source/subset-fonts.py 다시 실행)');
         assert.equal(await p.evaluate(() => [...document.fonts].filter((face) => face.family.replace(/"/g, '') === 'EHF Sans' && face.status === 'loaded').length), 3, 'EHF Sans 세 굵기 로드');
 
-        const timers = await p.evaluate(() => window.__deckTimers);
-        assert.deepEqual(timers, { timeout: 0, interval: 0, raf: 0 }, '자료 스크립트에 타이머·rAF 없음(자동 진행 없음)');
         assert.deepEqual(errors, [], '브라우저 오류');
     } finally {
         await p.close();
     }
-    console.log(`${deck.slug}: 이동 버튼 클릭 뒤 방향키·N, Tab·Enter·스페이스, 범위·순서·66/66 출처, 노트, 자동 전환 없음, 숨은 장 정지, 다시 재생, 단계↔슬라이드 분리, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
+    console.log(`${deck.slug}: 이동 버튼 클릭 뒤 방향키·N, Tab·Enter·스페이스, 범위·순서·66/66 출처, 노트, 모든 장의 자동 재생·마지막 유지, 스페이스·네 방향키 페이지 이동, 숨은 장·탭 정지, 예약 취소·다시 재생, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
 }

@@ -1,8 +1,8 @@
 (() => {
     'use strict';
     // 장면 단계: data-scene 슬라이드마다 단계 버튼을 붙이고, data-show 규칙으로 요소를 켜고 끕니다.
-    // 슬라이드 이동(← → 스페이스 PageUp/Down)은 공통 deck.js가 그대로 맡고, 장면 단계는 버튼과 ↓ ↑ 키로만 움직입니다.
-    // 움직임은 모두 CSS로 처리하므로 타이머·requestAnimationFrame이 없고, 숨겨진 슬라이드(display: none)에서는 아무것도 돌지 않습니다.
+    // 현재 장의 단계만 자동 재생하고, 페이지는 발표자가 스페이스·방향키로 넘깁니다.
+    // CSS 움직임이 끝날 시간을 둔 뒤 다음 단계를 표시합니다. 마지막 단계는 그대로 유지합니다.
     const params = new URLSearchParams(location.search);
     const RAIL = [['명세 작성', 'ai'], ['정적 검사', 'tool'], ['작품 생성', 'tool'], ['실행·관찰', 'tool'], ['작품별 검사', 'tool'], ['피드백', 'ai']];
     const DSL = new Set(['if_', 'eq', 'v', 'anyKey', 'inc', 'mul', 'sub', 'g', 's', 'isPressed']);
@@ -11,6 +11,34 @@
     let deck = null;
     let printing = params.has('print');
     let saved = null;
+    const STEP_MS = 4000;
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let timer = null;
+
+    function activeScene() { return sceneOf.get(deck.slides[deck.current]); }
+
+    function stopPlayback() {
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    function scheduleStep() {
+        stopPlayback();
+        const scene = activeScene();
+        if (printing || document.hidden || reducedMotion.matches || !scene || scene.step === scene.labels.length - 1) return;
+        timer = setTimeout(() => {
+            timer = null;
+            if (!printing && !document.hidden && activeScene() === scene) setStep(scene, scene.step + 1);
+        }, STEP_MS);
+    }
+
+    function startScene() {
+        stopPlayback();
+        const scene = activeScene();
+        if (!scene || printing) return;
+        if (reducedMotion.matches) setStep(scene, scene.labels.length - 1);
+        else replay(scene);
+    }
 
     // "2" → 2단계부터, "=2" → 2단계에서만, "<=1" → 1단계까지
     function rule(text) {
@@ -82,9 +110,9 @@
         bar.className = 'step-bar';
         bar.setAttribute('role', 'group');
         bar.setAttribute('aria-label', '장면 단계');
-        bar.innerHTML = '<button type="button" class="step-btn" data-step-prev aria-label="이전 단계" title="이전 단계 (↑)"></button>'
+        bar.innerHTML = '<button type="button" class="step-btn" data-step-prev aria-label="이전 단계" title="이전 단계"></button>'
             + '<span class="step-status" aria-live="polite"><span class="step-count" data-step-count></span><span class="step-name" data-step-name></span></span>'
-            + '<button type="button" class="step-btn next" data-step-next aria-label="다음 단계" title="다음 단계 (↓)"></button>'
+            + '<button type="button" class="step-btn next" data-step-next aria-label="다음 단계" title="다음 단계"></button>'
             + '<button type="button" class="step-btn" data-step-replay aria-label="처음부터 다시" title="처음부터 다시">↺</button>';
         scene.slide.append(bar);
         const press = (handler) => (event) => {
@@ -126,6 +154,7 @@
         scene.bar.name.textContent = scene.labels[k];
         scene.bar.prev.disabled = k === 0;
         scene.bar.next.disabled = k === last;
+        if (scene === activeScene()) scheduleStep();
     }
 
     // 장면을 0단계로 되돌리고 이 슬라이드의 CSS 애니메이션(타자·하이라이트 등)을 처음부터 다시 재생합니다.
@@ -141,6 +170,7 @@
     function preparePrint() {
         if (!printing && !saved) saved = new Map(scenes.map((scene) => [scene, scene.step]));
         printing = true;
+        stopPlayback();
         // PDF에는 각 장면의 마지막(완성) 단계를 싣습니다. 여러 번 호출해도 결과가 같습니다.
         for (const scene of scenes) setStep(scene, scene.labels.length - 1);
     }
@@ -169,35 +199,23 @@
         });
 
         window.addEventListener('deck:slidechange', ({ detail }) => {
-            if (printing) return;
-            const scene = sceneOf.get(detail.slide);
-            if (!scene || detail.previousSlide === detail.slide) return;
-            // 뒤 슬라이드에서 돌아오면 완성 단계, 그 밖에는 0단계부터 보여 줍니다.
-            const back = deck.slides.indexOf(detail.slide) < deck.slides.indexOf(detail.previousSlide);
-            setStep(scene, back ? scene.labels.length - 1 : 0);
+            if (printing || detail.previousSlide === detail.slide) return;
+            startScene();
         });
 
-        document.addEventListener('keydown', (event) => {
-            if (printing || event.altKey || event.ctrlKey || event.metaKey || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
-            const target = event.target;
-            if (target instanceof HTMLElement && target.matches('input, textarea, select, [contenteditable="true"]')) return;
-            const scene = sceneOf.get(deck.slides[deck.current]);
-            if (!scene) return;
-            event.preventDefault();
-            setStep(scene, scene.step + (event.key === 'ArrowDown' ? 1 : -1));
-        });
-
-        // 공통 deck.js는 버튼·링크에 포커스가 있으면 발표 키를 무시합니다. 하단 이동 버튼을 마우스로 누르면
-        // 포커스가 그 버튼에 남아 → 키와 N이 듣지 않으므로, 이 자료의 버튼·링크에서만 같은 동작을 대신 실행합니다.
-        // 스페이스·Enter·Tab은 버튼과 링크의 기본 동작 그대로 두고, 포커스도 옮기지 않습니다.
-        const PRESENTER_KEYS = { arrowright: 'next', pagedown: 'next', arrowleft: 'previous', pageup: 'previous', home: 'first', end: 'last', n: 'notes', f: 'fullscreen' };
+        // 이 자료에서만 네 방향키와 스페이스를 페이지 이동으로 통일합니다.
+        // 공통 처리 전에 한 번만 실행하므로 버튼에 포커스가 남아도 같게 동작합니다. Enter·Tab은 그대로 둡니다.
+        const PRESENTER_KEYS = { ' ': 'next', arrowright: 'next', arrowdown: 'next', pagedown: 'next', arrowleft: 'previous', arrowup: 'previous', pageup: 'previous', home: 'first', end: 'last', n: 'notes', f: 'fullscreen' };
         const presenterKey = (event) => {
-            const action = PRESENTER_KEYS[event.key.toLowerCase()];
-            const control = event.target instanceof Element ? event.target.closest('button, a[href]') : null;
-            if (printing || !action || !control || event.altKey || event.ctrlKey || event.metaKey) return;
-            event.preventDefault();
-            // 공통 deck.js가 나중에 버튼 포커스를 처리하게 바뀌어도 두 번 넘어가지 않도록 여기서 멈춥니다.
+            let action = PRESENTER_KEYS[event.key.toLowerCase()];
+            if (!action) return;
             event.stopPropagation();
+            const target = event.target;
+            if (printing || event.altKey || event.ctrlKey || event.metaKey
+                || (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select')))) return;
+            event.preventDefault();
+            if (event.repeat) return;
+            if (event.key === ' ' && event.shiftKey) action = 'previous';
             if (action === 'next') deck.next();
             else if (action === 'previous') deck.previous();
             else if (action === 'first') deck.go(0);
@@ -205,9 +223,15 @@
             else if (action === 'notes') deck.toggleNotes();
             else deck.toggleFullscreen();
         };
-        for (const area of [document.querySelector('.deck-controls'), document.querySelector('.deck-download'), deck.root]) {
-            area?.addEventListener('keydown', presenterKey);
-        }
+        document.addEventListener('keydown', presenterKey, true);
+        document.addEventListener('visibilitychange', scheduleStep);
+        window.addEventListener('pagehide', stopPlayback);
+        window.addEventListener('pageshow', scheduleStep);
+        reducedMotion.addEventListener('change', () => {
+            if (printing) return;
+            if (reducedMotion.matches && activeScene()) setStep(activeScene(), activeScene().labels.length - 1);
+            scheduleStep();
+        });
 
         window.addEventListener('deck:prepareprint', preparePrint);
         window.addEventListener('afterprint', () => {
@@ -215,9 +239,11 @@
             printing = false;
             if (saved) saved.forEach((step, scene) => setStep(scene, step));
             saved = null;
+            scheduleStep();
         });
         // 인쇄 주소(?print)에서는 공통 deck.js가 이 스크립트보다 먼저 인쇄 준비를 마치므로 여기서 한 번 더 맞춥니다.
         if (printing) preparePrint();
+        else startScene();
 
         window.entryHarnessFlow = {
             scenes: () => scenes.map((scene) => ({ name: scene.name, index: deck.slides.indexOf(scene.slide), steps: scene.labels.length, labels: [...scene.labels] })),
