@@ -27,6 +27,27 @@
     font-family: "EHF Sans", "Pretendard", "Noto Sans KR", "Noto Sans CJK KR", "Malgun Gothic", system-ui, sans-serif;
 }
 
+/* 전시 재생은 이 자료에서만 제공하며, PDF 버튼 옆에서 언제든 다시 켤 수 있습니다. */
+.exhibition-toggle {
+    position: fixed;
+    z-index: 22;
+    top: 14px;
+    right: 153px;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid var(--mine);
+    border-radius: 7px;
+    color: var(--mine-hi);
+    background: #101a2f;
+    font: 700 13px/1.4 "Malgun Gothic", system-ui, sans-serif;
+    cursor: pointer;
+}
+.exhibition-toggle[aria-pressed="true"] { color: #2a1700; background: var(--mine); }
+.exhibition-toggle:hover, .exhibition-toggle:focus-visible { outline: 2px solid var(--mine-hi); outline-offset: 3px; }
+:fullscreen .exhibition-toggle { right: 16px; }
+.print-view .exhibition-toggle { display: none !important; }
+@media print { .exhibition-toggle { display: none !important; } }
+
 .slide {
     padding: 4.4cqh 5.1cqw 8cqh;
     word-break: keep-all;

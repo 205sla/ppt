@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // 엔트리 하네스 웹 발표 전용 검사.
-// 장면은 자동 재생되고 페이지는 발표자가 직접 넘기는지,
+// 기본 장면 자동 재생·수동 이동과 전시용 페이지 반복 재생·스페이스 해제를 함께 확인합니다.
 // 되돌아가기·다시 재생이 예측 가능한지, 다룰 범위와 사실 표시, 화면 크기별 배치, 움직임 줄이기, 인쇄 상태를 확인합니다.
 const here = path.dirname(fileURLToPath(import.meta.url));
 const glyphs = new Set(JSON.parse(fs.readFileSync(path.join(here, 'font-glyphs.json'), 'utf8')).chars);
@@ -30,6 +30,7 @@ export default async function verify({ page, baseUrl, deck }) {
         const state = () => p.evaluate(() => window.entryHarnessFlow.state());
         const current = async () => (await state()).current;
         const step = async (name) => (await state()).steps[name];
+        const exhibitionButton = p.locator('[data-exhibition-toggle]');
         const go = (index) => p.evaluate((i) => window.ppt205Deck.go(i), index);
         const enterForward = async (name) => { await go(scene(name).index - 1); await p.keyboard.press('ArrowRight'); };
         const shown = (selector) => p.evaluate((s) => {
@@ -49,6 +50,7 @@ export default async function verify({ page, baseUrl, deck }) {
 
         // ── 공통 이동 버튼을 마우스로 누른 뒤에도 방향키·N이 바로 작동(공개 화면에서 재현된 문제) ──
         assert.equal(await current(), 0, '새로 열면 1쪽');
+        assert.equal((await state()).exhibition, false, '전시 재생은 버튼으로 켜기 전까지 꺼짐');
         await p.locator('[data-deck-next]').click();
         assert.equal(await p.locator('[data-deck-count]').innerText(), `2 / ${count}`);
         assert.equal(await focused(), 'next', '재현 조건: 클릭한 다음 버튼에 포커스가 남음');
@@ -79,7 +81,7 @@ export default async function verify({ page, baseUrl, deck }) {
         assert.equal(await current(), 0, '첫 장에서 이전 버튼이 비활성이 된 뒤에도 방향키');
 
         // 방향키 네 개와 스페이스는 포커스 위치와 관계없이 한 장씩 이동합니다.
-        for (const focus of ['body', '[data-deck-next]', '[data-deck-previous]', '.deck-download', '.slide.is-active [data-step-next]', '.slide.is-active [data-step-replay]']) {
+        for (const focus of ['body', '[data-deck-next]', '[data-deck-previous]', '.deck-download', '[data-exhibition-toggle]', '.slide.is-active [data-step-next]', '.slide.is-active [data-step-replay]']) {
             for (const [key, delta] of [['ArrowRight', 1], ['ArrowDown', 1], ['Space', 1], ['ArrowLeft', -1], ['ArrowUp', -1], ['Shift+Space', -1]]) {
                 await go(2);
                 if (focus === 'body') await p.evaluate(() => document.activeElement?.blur());
@@ -204,6 +206,90 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
         await p.clock.fastForward(4000);
         assert.equal(await step('request'), 2, '돌아온 탭에서 이어 재생');
+
+        // ── 전시 재생: 모든 장면을 보여 준 뒤 다음 장, 마지막 장에서는 표지로 반복 ──
+        await go(0);
+        await exhibitionButton.click();
+        assert.equal(await exhibitionButton.getAttribute('aria-pressed'), 'true');
+        assert.equal(await exhibitionButton.innerText(), '자동재생 끄기');
+        await p.clock.fastForward(7999);
+        assert.equal(await current(), 0, '표지는 8초 동안 표시');
+        await p.clock.fastForward(1);
+        for (let index = 1; index < count; index += 1) {
+            assert.equal(await current(), index, `전시 재생: ${index + 1}쪽 진입`);
+            const item = scenes.find((s) => s.index === index);
+            if (item) {
+                assert.equal(await step(item.name), 0, `${item.name}: 전시 진입도 처음부터`);
+                for (let k = 1; k < item.steps; k += 1) {
+                    await p.clock.fastForward(4000);
+                    assert.equal(await current(), index, `${item.name}: 장면 도중 페이지 유지`);
+                    assert.equal(await step(item.name), k, `${item.name}: 전시 단계 ${k + 1}`);
+                }
+            }
+            await p.clock.fastForward(7999);
+            assert.equal(await current(), index, `${index + 1}쪽: 완성 장면 8초 유지`);
+            await p.clock.fastForward(1);
+        }
+        assert.equal(await current(), 0, '마지막 장 뒤 표지로 반복');
+        await p.clock.fastForward(8000);
+        assert.equal(await current(), 1, '두 번째 순환도 재생');
+        await p.clock.fastForward(4000);
+        assert.equal(await step('request'), 1);
+
+        // 첫 Space는 페이지·단계를 유지하고, 이후에는 기존 페이지·장면 조작 그대로입니다.
+        await exhibitionButton.focus();
+        await p.keyboard.press('Space');
+        assert.equal((await state()).exhibition, false, '버튼에 포커스가 있어도 Space로 전시 정지');
+        assert.equal(await current(), 1, '첫 Space는 페이지를 넘기지 않음');
+        assert.equal(await step('request'), 1, '첫 Space는 현재 장면 유지');
+        assert.equal(await exhibitionButton.getAttribute('aria-pressed'), 'false');
+        assert.equal(await exhibitionButton.innerText(), '자동재생 켜기');
+        await p.clock.fastForward(4000);
+        assert.equal(await step('request'), 2, '수동 모드에서도 기존 장면 자동 재생 유지');
+        await p.clock.fastForward(60000);
+        assert.equal(await current(), 1, '시간이 지나도 전시 재생은 다시 켜지지 않음');
+        await p.keyboard.press('Space');
+        assert.equal(await current(), 2, '두 번째 Space부터 기존처럼 다음 페이지');
+        await p.keyboard.press('Shift+Space');
+        assert.equal(await current(), 1, '수동 모드 Shift+Space는 이전 페이지');
+
+        // 재개·중지 반복과 페이지 이동이 오래된 전환 예약을 남기지 않습니다.
+        await go(0);
+        await exhibitionButton.click();
+        await p.clock.fastForward(7000);
+        await p.keyboard.press('Space');
+        await p.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); dispatchEvent(new Event('pageshow')); });
+        await p.clock.fastForward(60000);
+        assert.equal(await current(), 0, '정지 후 탭 복귀·pageshow에서도 페이지 재생 안 함');
+        await exhibitionButton.focus();
+        await p.keyboard.press('Enter');
+        assert.equal((await state()).exhibition, true, 'Enter로 전시 재생 명시적 재개');
+        await p.clock.fastForward(7000);
+        await p.keyboard.press('End');
+        await p.clock.fastForward(1000);
+        assert.equal(await current(), count - 1, '직접 페이지 이동 후 이전 전환 예약 취소');
+        await p.clock.fastForward(7000);
+        assert.equal(await current(), 0, '이동한 페이지에서 새 간격으로 재생');
+        await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
+        await p.clock.fastForward(60000);
+        assert.equal(await current(), 0, '숨긴 탭에서는 전시 페이지 재생도 정지');
+        await p.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+        await p.clock.fastForward(8000);
+        assert.equal(await current(), 1, '탭 복귀 후 전시 재생 재개');
+        await exhibitionButton.click();
+        assert.equal((await state()).exhibition, false, '버튼으로도 수동 모드 전환');
+
+        for (const focus of ['body', '[data-deck-next]', '.slide.is-active [data-step-next]', '.deck-download']) {
+            await go(2);
+            await exhibitionButton.click();
+            if (focus === 'body') await p.evaluate(() => document.activeElement?.blur());
+            else await p.locator(focus).focus();
+            await p.keyboard.down('Space');
+            await p.keyboard.down('Space');
+            await p.keyboard.up('Space');
+            assert.equal(await current(), 2, `${focus}: 길게 누른 Space도 정지만 한 번`);
+            assert.equal((await state()).exhibition, false);
+        }
 
         // ── 숨겨진 장의 움직임 정리 ──
         await enterForward('roles');
@@ -335,6 +421,7 @@ export default async function verify({ page, baseUrl, deck }) {
             }).map((el) => el.tagName + '.' + el.getAttribute('class'));
             const bar = slide.querySelector('.step-bar')?.getBoundingClientRect();
             const download = document.querySelector('.deck-download')?.getBoundingClientRect();
+            const exhibition = document.querySelector('[data-exhibition-toggle]').getBoundingClientRect();
             const hits = (a, b) => a && b && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
             const lines = [];
             const walker = document.createTreeWalker(slide, NodeFilter.SHOW_TEXT);
@@ -349,6 +436,8 @@ export default async function verify({ page, baseUrl, deck }) {
                 outside,
                 underBar: lines.filter((line) => !line.inBar && hits(line.rect, bar)).map((line) => line.text),
                 underDownload: lines.filter((line) => hits(line.rect, download)).map((line) => line.text),
+                underExhibition: lines.filter((line) => hits(line.rect, exhibition)).map((line) => line.text),
+                exhibitionFits: exhibition.left >= 0 && exhibition.right <= innerWidth && exhibition.top >= 0 && exhibition.bottom <= innerHeight && !hits(exhibition, download),
                 small: lines.filter((line) => line.size < 19).map((line) => `${line.text} ${line.size}px`),
                 targets: [...slide.querySelectorAll('.step-btn, .behavior, a.button')].map((el) => el.getBoundingClientRect()).map((box) => Math.min(box.width, box.height)),
             };
@@ -365,6 +454,8 @@ export default async function verify({ page, baseUrl, deck }) {
                     assert.deepEqual(result.outside, [], `${where}: 슬라이드 밖으로 나감`);
                     assert.deepEqual(result.underBar, [], `${where}: 단계 버튼이 글자를 가림`);
                     if (width >= 1280) assert.deepEqual(result.underDownload, [], `${where}: PDF 버튼이 글자를 가림`);
+                    assert.deepEqual(result.underExhibition, [], `${where}: 전시 재생 버튼이 글자를 가림`);
+                    assert.equal(result.exhibitionFits, true, `${where}: 전시 버튼이 화면 안에 있고 PDF 버튼과 겹치지 않음`);
                     if (width === 1920) assert.deepEqual(result.small, [], `${where}: 1080p에서 19px보다 작은 글자`);
                     if (width === 844) assert.ok(result.targets.every((size) => size >= 35.5), `${where}: 터치 대상이 작음 ${result.targets}`);
                 }
@@ -386,11 +477,17 @@ export default async function verify({ page, baseUrl, deck }) {
         assert.equal(await current(), 2);
         await p.waitForTimeout(150); // 브라우저가 축소된 CSS 전환을 완료하도록 렌더링 시간을 둡니다.
         assert.deepEqual(await p.evaluate(() => document.querySelector('.slide.is-active').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').map((a) => a.effect.target.className)), [], '움직임 줄이기: 반복 애니메이션 없음');
+        await exhibitionButton.click();
+        await p.clock.fastForward(8000);
+        assert.equal(await current(), 3, '움직임 줄이기에서도 명시적 전시 재생은 페이지 이동');
+        assert.equal(await step('overview'), scene('overview').steps - 1, '움직임 줄이기: 다음 페이지도 완성 장면');
+        await p.keyboard.press('Space');
         await p.emulateMedia({ reducedMotion: 'no-preference' });
 
         // ── 인쇄(PDF): 모든 장면을 완성 단계로, 반복 호출해도 같고, 끝나면 원래 단계로 ──
         await enterForward('request');
         await p.evaluate(() => { window.entryHarnessFlow.setStep('request', 1); window.entryHarnessFlow.setStep('overview', 3); });
+        await exhibitionButton.click();
         const before = (await state()).steps;
         await p.evaluate(() => window.ppt205Deck.preparePrint());
         const once = await state();
@@ -399,7 +496,7 @@ export default async function verify({ page, baseUrl, deck }) {
         await p.evaluate(() => window.ppt205Deck.preparePrint());
         assert.deepEqual(await state(), once, '인쇄 준비 반복 안정성');
         for (const item of scenes) assert.equal(once.steps[item.name], item.steps - 1, `${item.name}: 인쇄는 완성 단계`);
-        assert.equal(await p.evaluate(() => [...document.querySelectorAll('.step-bar, .cover-help')].every((el) => getComputedStyle(el).display === 'none')), true, '인쇄에 단계 버튼·조작 안내 없음');
+        assert.equal(await p.evaluate(() => [...document.querySelectorAll('.step-bar, .cover-help, .exhibition-toggle')].every((el) => getComputedStyle(el).display === 'none')), true, '인쇄에 단계 버튼·전시 버튼·조작 안내 없음');
         assert.equal(await p.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.target?.closest?.('.slide')).length), 0, '인쇄 중 애니메이션 없음');
         assert.equal(await p.evaluate(() => ['.real-req', '.pipe-loop', '.tally', '.node.result .good', '.log-list li:last-child'].every((s) => getComputedStyle(document.querySelector(s)).opacity === '1')), true, '인쇄 장면에 완성 내용');
         await p.evaluate(() => dispatchEvent(new Event('afterprint')));
@@ -407,6 +504,9 @@ export default async function verify({ page, baseUrl, deck }) {
         assert.equal((await state()).printing, false);
         await p.clock.fastForward(4000);
         assert.equal(await step('request'), 2, '인쇄 후 현재 단계부터 자동 재생 재개');
+        await p.clock.fastForward(8000);
+        assert.equal(await current(), 2, '인쇄 후 전시 페이지 재생도 재개');
+        await p.keyboard.press('Space');
 
         // ── 글꼴: 화면 글자가 모두 포함된 자체 글꼴로 표시 ──
         const text = await p.evaluate(() => document.querySelector('.deck-stage').textContent + document.querySelector('.deck-controls').textContent);
@@ -418,5 +518,5 @@ export default async function verify({ page, baseUrl, deck }) {
     } finally {
         await p.close();
     }
-    console.log(`${deck.slug}: 이동 버튼 클릭 뒤 방향키·N, Tab·Enter·스페이스, 범위·순서·66/66 출처, 노트, 모든 장의 자동 재생·마지막 유지, 스페이스·네 방향키 페이지 이동, 숨은 장·탭 정지, 예약 취소·다시 재생, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
+    console.log(`${deck.slug}: 전시 12장 반복·Space 해제·명시적 재개, 기존 수동 조작, 이동 버튼 클릭 뒤 방향키·N, Tab·Enter·스페이스, 범위·순서·66/66 출처, 노트, 모든 장의 자동 재생·마지막 유지, 스페이스·네 방향키 페이지 이동, 숨은 장·탭 정지, 예약 취소·다시 재생, 되돌아오기, 3개 화면 크기 배치·글자 크기·터치, 움직임 줄이기, 인쇄 상태, 글꼴 검사 통과`);
 }

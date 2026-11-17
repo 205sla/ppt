@@ -1,8 +1,7 @@
 (() => {
     'use strict';
     // 장면 단계: data-scene 슬라이드마다 단계 버튼을 붙이고, data-show 규칙으로 요소를 켜고 끕니다.
-    // 현재 장의 단계만 자동 재생하고, 페이지는 발표자가 스페이스·방향키로 넘깁니다.
-    // CSS 움직임이 끝날 시간을 둔 뒤 다음 단계를 표시합니다. 마지막 단계는 그대로 유지합니다.
+    // 기본 조작은 장면 자동 재생·수동 페이지 이동. 전시 재생을 켠 동안만 페이지도 반복해서 넘깁니다.
     const params = new URLSearchParams(location.search);
     const RAIL = [['명세 작성', 'ai'], ['정적 검사', 'tool'], ['작품 생성', 'tool'], ['실행·관찰', 'tool'], ['작품별 검사', 'tool'], ['피드백', 'ai']];
     const DSL = new Set(['if_', 'eq', 'v', 'anyKey', 'inc', 'mul', 'sub', 'g', 's', 'isPressed']);
@@ -12,8 +11,20 @@
     let printing = params.has('print');
     let saved = null;
     const STEP_MS = 4000;
+    const PAGE_HOLD_MS = 8000;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     let timer = null;
+    let exhibition = false;
+    let exhibitionButton = null;
+
+    function setExhibition(enabled) {
+        if (printing) return;
+        exhibition = enabled;
+        exhibitionButton.setAttribute('aria-pressed', String(enabled));
+        exhibitionButton.textContent = enabled ? '자동재생 끄기' : '자동재생 켜기';
+        exhibitionButton.title = enabled ? '클릭 또는 Space: 수동 조작으로 전환' : '현재 장면부터 전시용 반복 재생';
+        scheduleStep();
+    }
 
     function activeScene() { return sceneOf.get(deck.slides[deck.current]); }
 
@@ -24,18 +35,24 @@
 
     function scheduleStep() {
         stopPlayback();
+        if (printing || document.hidden) return;
+        const slide = deck.slides[deck.current];
         const scene = activeScene();
-        if (printing || document.hidden || reducedMotion.matches || !scene || scene.step === scene.labels.length - 1) return;
+        const advanceStep = scene && !reducedMotion.matches && scene.step < scene.labels.length - 1;
+        if (!advanceStep && !exhibition) return;
         timer = setTimeout(() => {
             timer = null;
-            if (!printing && !document.hidden && activeScene() === scene) setStep(scene, scene.step + 1);
-        }, STEP_MS);
+            if (printing || document.hidden || deck.slides[deck.current] !== slide) return;
+            if (advanceStep) setStep(scene, scene.step + 1);
+            else if (exhibition) deck.go((deck.current + 1) % deck.slides.length);
+        }, advanceStep ? STEP_MS : PAGE_HOLD_MS);
     }
 
     function startScene() {
         stopPlayback();
         const scene = activeScene();
-        if (!scene || printing) return;
+        if (printing) return;
+        if (!scene) { scheduleStep(); return; }
         if (reducedMotion.matches) setStep(scene, scene.labels.length - 1);
         else replay(scene);
     }
@@ -178,6 +195,11 @@
     function init() {
         deck = window.ppt205Deck;
         if (!deck) return;
+        exhibitionButton = document.querySelector('[data-exhibition-toggle]');
+        exhibitionButton.addEventListener('click', (event) => {
+            setExhibition(!exhibition);
+            if (event.detail > 0) event.currentTarget.blur();
+        });
         document.querySelectorAll('.rail[data-rail]').forEach(buildRail);
         document.querySelectorAll('pre.code').forEach(highlightCode);
         document.querySelectorAll('[data-typewriter]').forEach(typewriter);
@@ -215,6 +237,9 @@
                 || (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select')))) return;
             event.preventDefault();
             if (event.repeat) return;
+            // 전시 중 첫 스페이스는 현재 페이지를 유지하고 기존 수동 조작으로 돌아갑니다.
+            // 그 뒤에는 기존처럼 다음/이전 페이지로 이동하며, 버튼을 누르기 전까지 전시 재생을 켜지 않습니다.
+            if (event.key === ' ' && exhibition) { setExhibition(false); return; }
             if (event.key === ' ' && event.shiftKey) action = 'previous';
             if (action === 'next') deck.next();
             else if (action === 'previous') deck.previous();
@@ -247,7 +272,7 @@
 
         window.entryHarnessFlow = {
             scenes: () => scenes.map((scene) => ({ name: scene.name, index: deck.slides.indexOf(scene.slide), steps: scene.labels.length, labels: [...scene.labels] })),
-            state: () => ({ current: deck.current, printing, steps: Object.fromEntries(scenes.map((scene) => [scene.name, scene.step])) }),
+            state: () => ({ current: deck.current, printing, exhibition, steps: Object.fromEntries(scenes.map((scene) => [scene.name, scene.step])) }),
             setStep: (name, step) => setStep(scenes.find((scene) => scene.name === name), step),
         };
     }
